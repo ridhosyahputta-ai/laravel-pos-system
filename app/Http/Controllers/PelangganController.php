@@ -20,11 +20,7 @@ class PelangganController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'nama' => 'required|string|max:255',
-            'no_hp' => 'nullable|string|max:20',
-            'alamat' => 'nullable|string',
-        ]);
+        $validated = $this->validatedData($request);
 
         Pelanggan::create($validated);
 
@@ -38,11 +34,7 @@ class PelangganController extends Controller
 
     public function update(Request $request, Pelanggan $pelanggan)
     {
-        $validated = $request->validate([
-            'nama' => 'required|string|max:255',
-            'no_hp' => 'nullable|string|max:20',
-            'alamat' => 'nullable|string',
-        ]);
+        $validated = $this->validatedData($request);
 
         $pelanggan->update($validated);
 
@@ -54,5 +46,22 @@ class PelangganController extends Controller
         $pelanggan->delete();
 
         return redirect()->route('pelanggan.index')->with('success', 'Pelanggan berhasil dihapus.');
+    }
+
+    private function validatedData(Request $request): array
+    {
+        return $request->validate([
+            'nama' => 'required|string|max:255',
+            'no_hp' => 'nullable|string|max:20',
+            'alamat' => 'nullable|string|max:2000',
+        ], [
+            'required' => ':attribute wajib diisi.',
+            'string' => ':attribute harus berupa teks.',
+            'max' => ':attribute maksimal :max karakter.',
+        ], [
+            'nama' => 'Nama pelanggan',
+            'no_hp' => 'Nomor HP',
+            'alamat' => 'Alamat',
+        ]);
     }
 }

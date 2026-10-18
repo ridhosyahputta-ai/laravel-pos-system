@@ -6,6 +6,7 @@ use App\Models\Kategori;
 use App\Models\Produk;
 use App\Models\Supplier;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -38,24 +39,16 @@ class ProdukController extends Controller
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
             'kode' => 'required|string|max:255|unique:produks,kode',
-            'harga' => 'required|integer|min:0',
-            'stok' => 'required|integer|min:0',
-            'kategori_id' => 'nullable|exists:kategoris,id',
-            'supplier_id' => 'nullable|exists:suppliers,id',
-            'keterangan' => 'nullable|string',
+            'harga' => 'required|integer|min:0|max:2147483647',
+            'stok' => 'required|integer|min:0|max:2147483647',
+            'kategori_id' => 'nullable|integer|exists:kategoris,id',
+            'supplier_id' => 'nullable|integer|exists:suppliers,id',
+            'keterangan' => 'nullable|string|max:2000',
         ]);
 
         Produk::create($validated);
 
         return redirect()->route('produk.index')->with('success', 'Produk berhasil ditambahkan.');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Produk $produk)
-    {
-        //
     }
 
     /**
@@ -76,11 +69,11 @@ class ProdukController extends Controller
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
             'kode' => ['required', 'string', 'max:255', Rule::unique('produks', 'kode')->ignore($produk->id)],
-            'harga' => 'required|integer|min:0',
-            'stok' => 'required|integer|min:0',
-            'kategori_id' => 'nullable|exists:kategoris,id',
-            'supplier_id' => 'nullable|exists:suppliers,id',
-            'keterangan' => 'nullable|string',
+            'harga' => 'required|integer|min:0|max:2147483647',
+            'stok' => 'required|integer|min:0|max:2147483647',
+            'kategori_id' => 'nullable|integer|exists:kategoris,id',
+            'supplier_id' => 'nullable|integer|exists:suppliers,id',
+            'keterangan' => 'nullable|string|max:2000',
         ]);
 
         $produk->update($validated);
@@ -93,7 +86,22 @@ class ProdukController extends Controller
      */
     public function destroy(Produk $produk)
     {
-        $produk->delete();
+        $message = 'Produk tidak dapat dihapus karena sudah digunakan dalam transaksi.';
+
+        if ($produk->transaksiDetails()->exists()) {
+            return redirect()->route('produk.index')->with('error', $message);
+        }
+
+        try {
+            $produk->delete();
+        } catch (QueryException $exception) {
+            // A transaction may have referenced this product after the initial check.
+            if (($exception->errorInfo[0] ?? null) === '23000' && $produk->transaksiDetails()->exists()) {
+                return redirect()->route('produk.index')->with('error', $message);
+            }
+
+            throw $exception;
+        }
 
         return redirect()->route('produk.index')->with('success', 'Produk berhasil dihapus.');
     }

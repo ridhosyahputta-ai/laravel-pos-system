@@ -17,7 +17,7 @@
                     </div>
                     <div>
                         <x-input-label for="keterangan" :value="__('Keterangan')" />
-                        <textarea id="keterangan" name="keterangan" rows="4" class="block mt-1.5 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">{{ old('keterangan', $kategori->keterangan) }}</textarea>
+                        <textarea id="keterangan" name="keterangan" rows="4" maxlength="2000" class="block mt-1.5 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-blue-500 dark:focus:border-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600 rounded-md shadow-sm">{{ old('keterangan', $kategori->keterangan) }}</textarea>
                         @error('keterangan')
                             <p class="text-sm text-red-600 mt-1.5">{{ $message }}</p>
                         @enderror

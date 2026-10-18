@@ -24,21 +24,21 @@
                     </div>
                     <div>
                         <x-input-label for="harga" :value="__('Harga')" />
-                        <x-text-input id="harga" class="block mt-1.5 w-full" type="number" min="0" name="harga" :value="old('harga')" required />
+                        <x-text-input id="harga" class="block mt-1.5 w-full" type="number" min="0" max="2147483647" step="1" name="harga" :value="old('harga')" required />
                         @error('harga')
                             <p class="text-sm text-red-600 mt-1.5">{{ $message }}</p>
                         @enderror
                     </div>
                     <div>
                         <x-input-label for="stok" :value="__('Stok')" />
-                        <x-text-input id="stok" class="block mt-1.5 w-full" type="number" min="0" name="stok" :value="old('stok')" required />
+                        <x-text-input id="stok" class="block mt-1.5 w-full" type="number" min="0" max="2147483647" step="1" name="stok" :value="old('stok')" required />
                         @error('stok')
                             <p class="text-sm text-red-600 mt-1.5">{{ $message }}</p>
                         @enderror
                     </div>
                     <div>
                         <x-input-label for="kategori_id" :value="__('Kategori')" />
-                        <select id="kategori_id" name="kategori_id" class="block mt-1.5 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <select id="kategori_id" name="kategori_id" class="block mt-1.5 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             <option value="">-- Pilih Kategori --</option>
                             @foreach ($kategoris as $kategori)
                                 <option value="{{ $kategori->id }}" {{ old('kategori_id') == $kategori->id ? 'selected' : '' }}>{{ $kategori->nama_kategori }}</option>
@@ -50,7 +50,7 @@
                     </div>
                     <div>
                         <x-input-label for="supplier_id" :value="__('Supplier')" />
-                        <select id="supplier_id" name="supplier_id" class="block mt-1.5 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <select id="supplier_id" name="supplier_id" class="block mt-1.5 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             <option value="">-- Pilih Supplier --</option>
                             @foreach ($suppliers as $supplier)
                                 <option value="{{ $supplier->id }}" {{ old('supplier_id') == $supplier->id ? 'selected' : '' }}>{{ $supplier->nama_supplier }}</option>
@@ -62,7 +62,7 @@
                     </div>
                     <div>
                         <x-input-label for="keterangan" :value="__('Keterangan')" />
-                        <textarea id="keterangan" name="keterangan" rows="4" class="block mt-1.5 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">{{ old('keterangan') }}</textarea>
+                        <textarea id="keterangan" name="keterangan" rows="4" maxlength="2000" class="block mt-1.5 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-blue-500 dark:focus:border-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600 rounded-md shadow-sm">{{ old('keterangan') }}</textarea>
                         @error('keterangan')
                             <p class="text-sm text-red-600 mt-1.5">{{ $message }}</p>
                         @enderror

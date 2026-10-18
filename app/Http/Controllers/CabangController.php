@@ -20,10 +20,7 @@ class CabangController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'nama_cabang' => 'required|string|max:255',
-            'lokasi' => 'nullable|string|max:255',
-        ]);
+        $validated = $this->validatedData($request);
 
         Cabang::create($validated);
 
@@ -37,10 +34,7 @@ class CabangController extends Controller
 
     public function update(Request $request, Cabang $cabang)
     {
-        $validated = $request->validate([
-            'nama_cabang' => 'required|string|max:255',
-            'lokasi' => 'nullable|string|max:255',
-        ]);
+        $validated = $this->validatedData($request);
 
         $cabang->update($validated);
 
@@ -52,5 +46,20 @@ class CabangController extends Controller
         $cabang->delete();
 
         return redirect()->route('cabang.index')->with('success', 'Cabang berhasil dihapus.');
+    }
+
+    private function validatedData(Request $request): array
+    {
+        return $request->validate([
+            'nama_cabang' => 'required|string|max:255',
+            'lokasi' => 'nullable|string|max:255',
+        ], [
+            'required' => ':attribute wajib diisi.',
+            'string' => ':attribute harus berupa teks.',
+            'max' => ':attribute maksimal :max karakter.',
+        ], [
+            'nama_cabang' => 'Nama cabang',
+            'lokasi' => 'Lokasi',
+        ]);
     }
 }

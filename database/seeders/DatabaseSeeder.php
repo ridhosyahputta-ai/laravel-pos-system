@@ -5,24 +5,29 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
 
 class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        $role = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'admin']);
-        
-        $user = \App\Models\User::create([
-            'name' => 'Admin Daffa',
-            'email' => 'admin@test.com',
-            'password' => bcrypt('12345678'),
-        ]);
-    
-        $user->assignRole($role);
+        $name = env('SEED_ADMIN_NAME');
+        $email = env('SEED_ADMIN_EMAIL');
+        $password = env('SEED_ADMIN_PASSWORD');
+
+        if (! is_string($name) || trim($name) === ''
+            || ! is_string($email) || ! filter_var($email, FILTER_VALIDATE_EMAIL)
+            || ! is_string($password) || $password === '') {
+            throw new \RuntimeException('Set private SEED_ADMIN_NAME, SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD before explicitly seeding a fresh database.');
+        }
+
+        DB::transaction(function () use ($name, $email, $password) {
+            $role = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+            $user = User::create(['name' => $name, 'email' => $email, 'password' => $password]);
+            $user->assignRole($role);
+        });
     }
 }

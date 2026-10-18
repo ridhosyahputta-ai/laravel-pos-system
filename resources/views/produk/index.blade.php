@@ -10,6 +10,10 @@
                     <div class="mb-4 p-4 bg-green-100 text-green-700 rounded-lg">{{ session('success') }}</div>
                 @endif
 
+                @if (session('error'))
+                    <div class="mb-4 p-4 bg-red-100 text-red-700 rounded-lg" role="alert">{{ session('error') }}</div>
+                @endif
+
                <div class="mb-4 flex gap-3">
     <a href="{{ route('produk.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">+ Tambah Produk</a>
     <a href="{{ route('produk.pdf') }}" class="text-white px-4 py-2 rounded-lg" style="background-color: #16a34a;" onmouseover="this.style.backgroundColor='#15803d'" onmouseout="this.style.backgroundColor='#16a34a'">Export PDF</a>

@@ -21,11 +21,7 @@ class PetugasController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'nama' => 'required|string|max:255',
-            'username' => 'required|string|max:255|unique:petugas,username',
-            'role' => 'required|in:Kasir,Admin',
-        ]);
+        $validated = $this->validatedData($request);
 
         Petugas::create($validated);
 
@@ -39,11 +35,7 @@ class PetugasController extends Controller
 
     public function update(Request $request, Petugas $petugas)
     {
-        $validated = $request->validate([
-            'nama' => 'required|string|max:255',
-            'username' => ['required', 'string', 'max:255', Rule::unique('petugas', 'username')->ignore($petugas->id)],
-            'role' => 'required|in:Kasir,Admin',
-        ]);
+        $validated = $this->validatedData($request, $petugas);
 
         $petugas->update($validated);
 
@@ -55,5 +47,29 @@ class PetugasController extends Controller
         $petugas->delete();
 
         return redirect()->route('petugas.index')->with('success', 'Petugas berhasil dihapus.');
+    }
+
+    private function validatedData(Request $request, ?Petugas $petugas = null): array
+    {
+        $username = Rule::unique('petugas', 'username');
+        if ($petugas) {
+            $username->ignore($petugas->getKey());
+        }
+
+        return $request->validate([
+            'nama' => 'required|string|max:255',
+            'username' => ['required', 'string', 'max:255', $username],
+            'role' => 'required|string|in:Kasir,Admin',
+        ], [
+            'required' => ':attribute wajib diisi.',
+            'string' => ':attribute harus berupa teks.',
+            'max' => ':attribute maksimal :max karakter.',
+            'username.unique' => 'Username sudah digunakan petugas lain.',
+            'role.in' => 'Role petugas harus Kasir atau Admin.',
+        ], [
+            'nama' => 'Nama petugas',
+            'username' => 'Username',
+            'role' => 'Role petugas',
+        ]);
     }
 }

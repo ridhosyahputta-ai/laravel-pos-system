@@ -20,11 +20,7 @@ class SupplierController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'nama_supplier' => 'required|string|max:255',
-            'kontak' => 'nullable|string|max:255',
-            'alamat' => 'nullable|string',
-        ]);
+        $validated = $this->validatedData($request);
 
         Supplier::create($validated);
 
@@ -38,11 +34,7 @@ class SupplierController extends Controller
 
     public function update(Request $request, Supplier $supplier)
     {
-        $validated = $request->validate([
-            'nama_supplier' => 'required|string|max:255',
-            'kontak' => 'nullable|string|max:255',
-            'alamat' => 'nullable|string',
-        ]);
+        $validated = $this->validatedData($request);
 
         $supplier->update($validated);
 
@@ -54,5 +46,22 @@ class SupplierController extends Controller
         $supplier->delete();
 
         return redirect()->route('supplier.index')->with('success', 'Supplier berhasil dihapus.');
+    }
+
+    private function validatedData(Request $request): array
+    {
+        return $request->validate([
+            'nama_supplier' => 'required|string|max:255',
+            'kontak' => 'nullable|string|max:255',
+            'alamat' => 'nullable|string|max:2000',
+        ], [
+            'required' => ':attribute wajib diisi.',
+            'string' => ':attribute harus berupa teks.',
+            'max' => ':attribute maksimal :max karakter.',
+        ], [
+            'nama_supplier' => 'Nama supplier',
+            'kontak' => 'Kontak',
+            'alamat' => 'Alamat',
+        ]);
     }
 }

@@ -33,7 +33,7 @@
                                 <td class="border p-3">{{ $supplier->alamat ?? '-' }}</td>
                                 <td class="border p-3 flex gap-3">
                                     <a href="{{ route('supplier.edit', $supplier->id) }}" class="text-blue-600 hover:underline">Edit</a>
-                                    <form action="{{ route('supplier.destroy', $supplier->id) }}" method="POST" onsubmit="return confirm('Hapus data?');">
+                                    <form action="{{ route('supplier.destroy', $supplier->id) }}" method="POST" onsubmit="return confirm('Hapus supplier? Produk tetap tersimpan, tetapi hubungan supplier akan dikosongkan.');">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="text-red-600 hover:underline">Hapus</button>
                                     </form>

@@ -22,7 +22,7 @@ class KategoriController extends Controller
     {
         $validated = $request->validate([
             'nama_kategori' => 'required|string|max:255',
-            'keterangan' => 'nullable|string',
+            'keterangan' => 'nullable|string|max:2000',
         ]);
 
         Kategori::create($validated);
@@ -39,7 +39,7 @@ class KategoriController extends Controller
     {
         $validated = $request->validate([
             'nama_kategori' => 'required|string|max:255',
-            'keterangan' => 'nullable|string',
+            'keterangan' => 'nullable|string|max:2000',
         ]);
 
         $kategori->update($validated);

@@ -10,21 +10,21 @@
                     @csrf @method('PUT')
                     <div>
                         <x-input-label for="nama" :value="__('Nama Petugas')" />
-                        <x-text-input id="nama" class="block mt-1.5 w-full" type="text" name="nama" :value="old('nama', $petugas->nama)" required />
+                        <x-text-input id="nama" class="block mt-1.5 w-full" type="text" name="nama" maxlength="255" :value="old('nama', $petugas->nama)" required />
                         @error('nama')
                             <p class="text-sm text-red-600 mt-1.5">{{ $message }}</p>
                         @enderror
                     </div>
                     <div>
                         <x-input-label for="username" :value="__('Username')" />
-                        <x-text-input id="username" class="block mt-1.5 w-full" type="text" name="username" :value="old('username', $petugas->username)" required />
+                        <x-text-input id="username" class="block mt-1.5 w-full" type="text" name="username" maxlength="255" :value="old('username', $petugas->username)" required />
                         @error('username')
                             <p class="text-sm text-red-600 mt-1.5">{{ $message }}</p>
                         @enderror
                     </div>
                     <div>
                         <x-input-label for="role" :value="__('Role')" />
-                        <select id="role" name="role" class="block mt-1.5 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <select id="role" name="role" class="block mt-1.5 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             <option value="Kasir" {{ old('role', $petugas->role) == 'Kasir' ? 'selected' : '' }}>Kasir</option>
                             <option value="Admin" {{ old('role', $petugas->role) == 'Admin' ? 'selected' : '' }}>Admin</option>
                         </select>

@@ -50,7 +50,7 @@
                                                max="{{ $produk->stok }}"
                                                value="1"
                                                disabled
-                                               class="w-24 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                               class="w-24 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                     </td>
                                 </tr>
                             @empty

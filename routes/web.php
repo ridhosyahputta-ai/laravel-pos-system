@@ -15,19 +15,23 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+});
+
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::get('/produk/export/pdf', [ProdukController::class, 'downloadPdf'])->name('produk.pdf');
 
     // Route Resource CRUD
-    Route::resource('produk', ProdukController::class);
-    Route::resource('kategori', KategoriController::class);
-    Route::resource('pelanggan', PelangganController::class);
-    Route::resource('cabang', CabangController::class);
-    Route::resource('petugas', PetugasController::class);
-    Route::resource('supplier', SupplierController::class);
+    Route::resource('produk', ProdukController::class)->except('show');
+    Route::resource('kategori', KategoriController::class)->except('show');
+    Route::resource('pelanggan', PelangganController::class)->except('show');
+    Route::resource('cabang', CabangController::class)->except('show');
+    Route::resource('petugas', PetugasController::class)->parameters(['petugas' => 'petugas'])->except('show');
+    Route::resource('supplier', SupplierController::class)->except('show');
 
     Route::get('/transaksi', [TransaksiController::class, 'index'])->name('transaksi.index');
     Route::get('/transaksi/create', [TransaksiController::class, 'create'])->name('transaksi.create');

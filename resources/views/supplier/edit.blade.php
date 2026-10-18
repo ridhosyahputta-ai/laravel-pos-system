@@ -10,21 +10,21 @@
                     @csrf @method('PUT')
                     <div>
                         <x-input-label for="nama_supplier" :value="__('Nama Supplier')" />
-                        <x-text-input id="nama_supplier" class="block mt-1.5 w-full" type="text" name="nama_supplier" :value="old('nama_supplier', $supplier->nama_supplier)" required />
+                        <x-text-input id="nama_supplier" class="block mt-1.5 w-full" type="text" name="nama_supplier" maxlength="255" :value="old('nama_supplier', $supplier->nama_supplier)" required />
                         @error('nama_supplier')
                             <p class="text-sm text-red-600 mt-1.5">{{ $message }}</p>
                         @enderror
                     </div>
                     <div>
                         <x-input-label for="kontak" :value="__('Kontak')" />
-                        <x-text-input id="kontak" class="block mt-1.5 w-full" type="text" name="kontak" :value="old('kontak', $supplier->kontak)" />
+                        <x-text-input id="kontak" class="block mt-1.5 w-full" type="text" name="kontak" maxlength="255" :value="old('kontak', $supplier->kontak)" />
                         @error('kontak')
                             <p class="text-sm text-red-600 mt-1.5">{{ $message }}</p>
                         @enderror
                     </div>
                     <div>
                         <x-input-label for="alamat" :value="__('Alamat')" />
-                        <textarea id="alamat" name="alamat" rows="4" class="block mt-1.5 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">{{ old('alamat', $supplier->alamat) }}</textarea>
+                        <textarea id="alamat" name="alamat" maxlength="2000" rows="4" class="block mt-1.5 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-blue-500 dark:focus:border-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600 rounded-md shadow-sm">{{ old('alamat', $supplier->alamat) }}</textarea>
                         @error('alamat')
                             <p class="text-sm text-red-600 mt-1.5">{{ $message }}</p>
                         @enderror

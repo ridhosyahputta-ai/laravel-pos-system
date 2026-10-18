@@ -10,14 +10,14 @@
                     @csrf @method('PUT')
                     <div>
                         <x-input-label for="nama_cabang" :value="__('Nama Cabang')" />
-                        <x-text-input id="nama_cabang" class="block mt-1.5 w-full" type="text" name="nama_cabang" :value="old('nama_cabang', $cabang->nama_cabang)" required />
+                        <x-text-input id="nama_cabang" class="block mt-1.5 w-full" type="text" name="nama_cabang" maxlength="255" :value="old('nama_cabang', $cabang->nama_cabang)" required />
                         @error('nama_cabang')
                             <p class="text-sm text-red-600 mt-1.5">{{ $message }}</p>
                         @enderror
                     </div>
                     <div>
                         <x-input-label for="lokasi" :value="__('Lokasi Cabang')" />
-                        <x-text-input id="lokasi" class="block mt-1.5 w-full" type="text" name="lokasi" :value="old('lokasi', $cabang->lokasi)" />
+                        <x-text-input id="lokasi" class="block mt-1.5 w-full" type="text" name="lokasi" maxlength="255" :value="old('lokasi', $cabang->lokasi)" />
                         @error('lokasi')
                             <p class="text-sm text-red-600 mt-1.5">{{ $message }}</p>
                         @enderror
