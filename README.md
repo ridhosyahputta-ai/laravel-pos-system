@@ -1,127 +1,131 @@
-# Runway — Laravel POS System
+# Runway — Multi-Branch POS System
 
-Aplikasi Point of Sale berbasis Laravel untuk pengelolaan master data toko dan pencatatan penjualan. Project masih dalam tahap pengembangan; fitur transaksi dan akses kasir belum selesai difinalisasi.
+Runway adalah aplikasi Point of Sale berbasis Laravel untuk mengelola master data, mencatat penjualan, dan mengurangi stok secara otomatis. Project ini dikembangkan sebagai portofolio dengan fokus pada konsistensi data, validasi backend, dan pengujian transaksi.
+
+**Multi-branch merupakan arah pengembangan, belum implementasi operasional yang selesai.** Master Cabang sudah tersedia, tetapi pemisahan stok, transaksi, pengguna, dan laporan per cabang masih direncanakan.
+
+## Fitur yang tersedia
+
+- Login Admin, dashboard jumlah master data dan produk dengan stok rendah.
+- Profil sendiri: perubahan nama/email dan password dengan verifikasi password saat ini. Penghapusan akun sendiri dinonaktifkan.
+- Enam modul master data dengan CRUD, validasi, pagination, dan proteksi relasi.
+- Penjualan satu atau beberapa produk, riwayat, dan detail transaksi.
+- Ekspor daftar produk ke PDF.
+- Antarmuka Blade dengan branding Runway, Tailwind CSS, dan Alpine.js.
+
+| Master data | Kemampuan |
+| --- | --- |
+| Produk | Kode unik, harga/stok, kategori, supplier, keterangan; produk yang digunakan transaksi dilindungi dari penghapusan |
+| Kategori | Nama dan keterangan opsional hingga 2.000 karakter |
+| Supplier | Nama, kontak, alamat, dan relasi produk |
+| Pelanggan | Nama, nomor telepon, dan alamat |
+| Cabang | Nama cabang dan lokasi sebagai master data |
+| Petugas | Nama, username unik, dan label peran master data |
+
+## Transaksi dan integritas stok
+
+Harga, jumlah, subtotal, dan total divalidasi serta dihitung di backend menggunakan harga database. Harga dan total yang dikirim browser tidak menjadi sumber kebenaran. Produk duplikat dalam satu keranjang digabung, jumlah harus bulat positif, dan stok diperiksa kembali saat penyimpanan.
+
+Header transaksi, detail, klaim idempotency, dan pengurangan stok disimpan dalam satu database transaction. Produk dikunci dengan `lockForUpdate()` dalam urutan ID, pengurangan stok bersyarat mencegah stok negatif, dan operasi diulang secara terbatas ketika terjadi deadlock. Nomor transaksi menggunakan UUID dan unique index.
+
+Setiap pengajuan menggunakan token idempotency unik. Pengiriman ulang token dengan keranjang setara oleh pengguna yang sama mengembalikan transaksi yang sudah tersimpan tanpa mengurangi stok kembali. Pemakaian token untuk keranjang atau pengguna berbeda ditolak. **Form baru menghasilkan token baru dan dapat mencatat penjualan berbeda**; idempotency bukan pembatas untuk semua keranjang yang kebetulan sama.
+
+Form menolak jumlah kosong, pecahan, nol, negatif, atau melebihi stok. Estimasi tidak valid diberi petunjuk perbaikan dan tombol simpan tetap terkunci selama pengiriman. Total browser adalah estimasi; backend tetap memeriksa semua nilai. Perhitungan mengikuti harga produk dalam rupiah utuh dan kapasitas kolom database.
+
+Tanggal pada daftar dan detail ditampilkan dalam **Asia/Jakarta (WIB)**. Konversi hanya dilakukan pada lapisan presentasi; timezone global aplikasi tetap UTC dan nilai tersimpan tidak diubah. Alur penjualan juga telah diverifikasi manual pada lingkungan pengembangan lokal.
+
+Implementasi utama: [CreateSale](app/Actions/CreateSale.php), [TransaksiController](app/Http/Controllers/TransaksiController.php), dan [komponen tanggal](resources/views/components/transaction-date.blade.php).
 
 ## Teknologi dan persyaratan
 
-| Komponen | Persyaratan / kondisi terverifikasi |
+| Komponen | Persyaratan / versi lingkungan yang diuji |
 | --- | --- |
-| PHP | `^8.2` menurut Composer; lingkungan Windows diuji dengan PHP **8.4.26 NTS x64** |
+| PHP | `^8.2`; lingkungan Windows menggunakan **8.4.26 NTS x64** |
 | Laravel | **12.64.0**, mengikuti `composer.lock` |
-| Composer | **2.x**; diuji dengan **2.10.3** |
-| Node.js | Node **24 LTS** direkomendasikan; diuji dengan **24.22.0** |
-| npm | Diuji dengan **11.19.1**, bawaan instalasi Node terpisah |
-| Vite / Laravel Vite Plugin | **7.3.6 / 2.1.0**; requirement Node `^20.19.0 || >=22.12.0` |
-| Database | MariaDB melalui PDO MySQL; lingkungan lokal memakai **MariaDB 10.4.32** |
-| Frontend | Blade, Tailwind CSS 3, Alpine.js, Axios |
-| Autentikasi | Scaffolding Breeze dan Spatie Laravel Permission **6.25.0** |
-| PDF | Laravel DomPDF **3.1.2** |
-| Pengujian | Pest/PHPUnit dengan SQLite `:memory:` |
+| Composer | **2.x**, diuji dengan **2.10.3** |
+| Node.js | **24 LTS**, diuji dengan **24.22.0** |
+| npm | **11.19.1** pada lingkungan pengembangan |
+| Vite / Laravel Vite Plugin | **7.3.6 / 2.1.0**; engine Node `^20.19.0 || >=22.12.0` |
+| Database | **MariaDB 10.4.32**, tabel InnoDB, charset `utf8mb4` |
+| UI | Blade, Tailwind CSS 3, Alpine.js, Axios |
+| Autentikasi dan akses | Breeze dan Spatie Laravel Permission 6.25 |
+| PDF | Laravel DomPDF 3.1 |
+| Pengujian | Pest/PHPUnit, PDO SQLite, PDO MySQL, Node.js test runner |
 
-Ekstensi PHP mencakup PDO MySQL, PDO SQLite untuk pengujian, Mbstring, OpenSSL, Fileinfo, DOM/XML, Curl, dan Zip. Jalankan `composer check-platform-reqs` untuk memeriksa seluruh kebutuhan paket. Jangan menonaktifkan verifikasi TLS untuk mengunduh dependency.
-
-## Fitur yang sudah tersedia
-
-- **Login Admin:** autentikasi email/password dan proteksi middleware admin pada modul bisnis saat ini.
-- **Dashboard:** jumlah data master dan daftar produk dengan stok kurang dari 10; belum merupakan dashboard omzet.
-- **Profil sendiri:** lihat/ubah nama dan email serta perubahan password dengan password saat ini. Komponen hapus akun tidak ditampilkan dan route penghapusan profil tidak tersedia.
-- **Produk:** CRUD, kode unik, validasi harga/stok, relasi kategori/supplier, dan keterangan. Produk yang dipakai transaksi tidak dapat dihapus.
-- **Kategori:** CRUD dengan keterangan opsional maksimal 2.000 karakter setelah skema database diselaraskan.
-- **Supplier, pelanggan, cabang, petugas:** CRUD, validasi, pesan kesalahan, dan pagination. Binding route Petugas sudah menggunakan `{petugas}`.
-- **Relasi penghapusan:** penghapusan kategori/supplier mempertahankan produk dan mengosongkan referensi terkait sesuai foreign key.
-- **Ekspor PDF:** daftar produk dapat diunduh sebagai `data-produk.pdf`.
-- **Transaksi dasar:** pemilihan beberapa produk, riwayat/detail, penghitungan harga di server, database transaction, pemeriksaan dan pengurangan stok dengan penguncian baris. Finalisasi serta pengujian khusus transaksi masih tertunda.
-- **Branding Runway:** komponen biru dan layout autentikasi responsif dipertahankan.
-
-### Batas fitur dan akses saat ini
-
-Seluruh modul bisnis, termasuk transaksi, masih dibatasi untuk role `admin`. Data `petugas.role` adalah label master data, bukan pemberian role akun login. UI pembuatan akun kasir oleh admin belum tersedia.
-
-Kebijakan yang dituju adalah POS internal. Penonaktifan registrasi publik dan implementasi akses kasir belum dikerjakan; routes registrasi bawaan masih tersedia. Jangan menganggap kebijakan tersebut sudah diterapkan seluruhnya.
-
-Belum tersedia pembayaran/kembalian, struk thermal, retur, shift kasir, laporan penjualan lengkap, atau stok per cabang.
+Ekstensi PHP meliputi PDO MySQL, PDO SQLite, Mbstring, OpenSSL, Fileinfo, DOM/XML, Curl, dan Zip. Gunakan `composer check-platform-reqs` untuk memeriksa kebutuhan seluruh dependency. Pertahankan verifikasi TLS saat mengunduh paket.
 
 ## Instalasi baru
 
-Instruksi ini hanya untuk checkout baru dan database pengembangan baru yang kosong. Jangan menjalankannya sebagai prosedur upgrade database lokal yang sudah berisi data.
+Instruksi berikut ditujukan untuk checkout baru dan database development kosong, bukan prosedur upgrade database yang sudah berisi data.
 
 ```powershell
 git clone https://github.com/ridhosyahputta-ai/laravel-pos-system.git
 Set-Location laravel-pos-system
 
-# Jangan menimpa environment yang sudah ada.
 if (!(Test-Path .env)) { Copy-Item .env.example .env }
-
 php -v
 composer install
 composer check-platform-reqs
 npm ci
 ```
 
-Pastikan `php` benar-benar menunjuk PHP yang kompatibel. Pada laptop yang menggunakan instalasi terpisah, Composer dapat dijalankan dengan:
+Atur koneksi database secara privat di `.env`: `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, dan `DB_PASSWORD`. Buat database development kosong terlebih dahulu dan pastikan targetnya benar. Gunakan PHP yang kompatibel; PHP Apache XAMPP lama tidak otomatis sama dengan PHP CLI.
 
-```powershell
-& C:\tools\php84\php.exe C:\tools\composer\composer.phar --version
-& C:\tools\php84\php.exe C:\tools\composer\composer.phar check-platform-reqs
-```
-
-Untuk environment baru saja, buat application key:
+Hanya untuk environment baru tersebut:
 
 ```powershell
 php artisan key:generate
-```
-
-Jangan membuat ulang APP_KEY pada instalasi yang sudah berjalan. Konfigurasikan koneksi MariaDB/MySQL secara privat dalam `.env`, termasuk `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, dan `DB_PASSWORD`. Buat database pengembangan baru terlebih dahulu dan pastikan nama targetnya benar.
-
-Hanya setelah database baru yang kosong tersebut dipastikan:
-
-```powershell
 php artisan migrate
 npm run build
 ```
 
-Jangan memakai `composer run setup` pada database existing: script tersebut mencakup instalasi dependency, pembuatan key, dan migration.
+Jangan membuat ulang APP_KEY pada instalasi yang sudah berjalan. Script `composer run setup` juga menjalankan pembuatan key dan migration sehingga tidak cocok untuk upgrade database existing tanpa pemeriksaan.
 
-### Akun awal
+### Akun Admin awal
 
-Repository tidak menyediakan kredensial demo atau password default. Untuk provisioning yang disetujui pada database baru, seeder Admin memerlukan `SEED_ADMIN_NAME`, `SEED_ADMIN_EMAIL`, dan `SEED_ADMIN_PASSWORD` dari environment privat. Nilai contoh dibiarkan kosong; password di-hash oleh model Laravel.
+Repository tidak menyediakan akun demo, password default, atau salinan akun lokal. Pada database development baru, provisioning Admin melalui `DatabaseSeeder` memerlukan `SEED_ADMIN_NAME`, `SEED_ADMIN_EMAIL`, dan `SEED_ADMIN_PASSWORD` yang diisi secara privat. Model Laravel melakukan hashing password.
 
-Seeder akun alternatif juga memerlukan variabel `SEED_CASHIER_*` dan role yang sesuai. Seeder bukan proses otomatis saat aplikasi dijalankan. Jangan menjalankan seeder pada database existing untuk memulihkan login atau mereset password.
+Setelah target database kosong dan konfigurasi privat dipastikan, provisioning dapat dilakukan secara eksplisit dengan `php artisan db:seed --class=DatabaseSeeder`. Ini bukan langkah otomatis, dan bukan cara mereset password pada database existing. UI pembuatan akun kasir oleh Admin belum tersedia.
 
-## Menjalankan lokal di Windows
+## Menjalankan lokal
 
-Apache XAMPP pada lingkungan yang diaudit masih memakai PHP 8.0. Gunakan PHP 8.4 terpisah untuk aplikasi ini, tanpa mengganti PHP Apache.
-
-Dari root project, buka terminal pengembangan khusus:
+Dari terminal khusus pada root project:
 
 ```powershell
 $env:SESSION_DRIVER = 'file'
 $env:CACHE_STORE = 'array'
 $env:APP_URL = 'http://127.0.0.1:8000'
+php artisan serve --host=127.0.0.1 --port=8000 --tries=1 --no-reload
+```
 
+Buka [halaman login](http://127.0.0.1:8000/login), lalu gunakan menu Transaksi. Gunakan host yang konsisten untuk session login. Override di atas hanya berlaku pada terminal/proses tersebut dan tidak mengubah `.env`; cache `array` digunakan untuk pengembangan sementara.
+
+Jika PHP 8.4 dipasang terpisah di Windows, jalankan dengan executable absolut, misalnya:
+
+```powershell
+& C:\tools\php84\php.exe C:\tools\composer\composer.phar check-platform-reqs
 & C:\tools\php84\php.exe artisan serve --host=127.0.0.1 --port=8000 --tries=1 --no-reload
 ```
 
-Buka `http://127.0.0.1:8000/login`. Override tersebut hanya berlaku pada proses terminal dan tidak mengubah `.env`. Session file mempertahankan login; session `array` tidak mempertahankan login antar-request. Cache `array` ditujukan untuk pemeriksaan lokal sementara, bukan konfigurasi deployment.
+Untuk mengembangkan aset, jalankan `npm run dev` pada terminal terpisah. Checkout baru memerlukan build aset atau Vite karena `public/build`, `vendor`, dan `node_modules` tidak disimpan dalam Git. Fitur saat ini tidak memerlukan upload produk atau symbolic link storage.
 
-Untuk perubahan frontend, jalankan Vite pada terminal terpisah dengan PATH sementara:
+## Pengujian dan isolasi
 
-```powershell
-$env:PATH = "C:\tools\node24;$env:PATH"
-& C:\tools\node24\npm.cmd run dev
-```
+Hasil regresi terfokus terakhir untuk finalisasi Tahap 3, tanpa migration tambahan:
 
-Aset build tidak disimpan dalam Git. Instalasi baru perlu membangun aset atau menjalankan Vite. Folder `public/storage` belum diperlukan oleh fitur upload saat ini; link tersebut tidak dibuat otomatis.
+| Suite | Test lulus | Assertions |
+| --- | ---: | ---: |
+| Presentasi pada SQLite `:memory:` | 6 | 38 |
+| MariaDB terisolasi, tanpa mengulang tes migration | 21 | 182 |
+| JavaScript form dengan DOM fixture | 17 | Tidak dihitung oleh Node sebagai assertions terpisah |
 
-## Pengujian terisolasi
+Cakupan MariaDB mencakup CRUD enam master, akses Admin, PDF, harga backend, stok, rollback, token idempotency, nomor unik, dua proses dengan token sama, perebutan stok dengan token berbeda, serta deadlock InnoDB nyata dan retry. Worker menggunakan proses PHP dan koneksi database terpisah; hasil konkurensi tidak didasarkan pada simulasi SQLite.
 
-Hasil terakhir untuk suite CRUD terfokus dan regresinya: **87 test lulus, 658 assertions**. Ini bukan klaim bahwa seluruh suite project atau seluruh alur transaksi sudah diuji.
+Pengujian presentasi mencakup batas form, CSRF/token, tanggal WIB termasuk pergantian hari/tahun, dan pelestarian nilai UTC. Test JavaScript menjalankan script form yang sebenarnya dengan DOM fixture untuk input tidak valid, estimasi, penguncian submit, dan pemulihan back-forward cache. Ini bukan pengganti pengujian browser interaktif.
 
-Cakupan: enam modul master, validasi create/update, batas input, binding record, username/kode duplikat, pembatasan akses, pelestarian produk/transaksi saat master dihapus, PDF, dan migration korektif kategori pada SQLite.
+### SQLite dan JavaScript
 
-`tests/TestCase.php` menolak bootstrap database test di luar `APP_ENV=testing` dan SQLite `:memory:` serta menolak konfigurasi aplikasi yang di-cache. Pengaman berjalan sebelum setup `RefreshDatabase`.
-
-Jalankan dari terminal testing tersendiri:
+Jalankan pada terminal testing tersendiri:
 
 ```powershell
 $env:APP_ENV = 'testing'
@@ -133,27 +137,40 @@ $env:SESSION_DRIVER = 'array'
 $env:QUEUE_CONNECTION = 'sync'
 $env:MAIL_MAILER = 'array'
 
-& C:\tools\php84\php.exe vendor/pestphp/pest/bin/pest tests/Feature/MasterDataCrudTest.php tests/Feature/ProdukKategoriTest.php tests/Feature/KategoriSchemaMigrationTest.php --no-coverage --do-not-cache-result
+php vendor/pestphp/pest/bin/pest tests/Unit/TransaksiPresentationTest.php --no-coverage --do-not-cache-result
+node --test tests/Frontend/transaction-form.test.cjs
 ```
 
-Jangan mengarahkan `RefreshDatabase`, `migrate:fresh`, atau test mutasi ke database bisnis. Pengujian MariaDB memerlukan suite dan database testing terpisah yang disiapkan secara khusus; guard saat ini sengaja hanya mengizinkan SQLite in-memory.
+`tests/TestCase.php` menolak database di luar SQLite `:memory:`, lingkungan non-testing, dan konfigurasi cache sebelum setup database test. Suite backend yang lebih luas tersedia pada `tests/Feature/ProdukKategoriTest.php`, `MasterDataCrudTest.php`, `TransaksiTest.php`, dan `TransaksiIdempotencyTest.php`; suite Feature menggunakan `RefreshDatabase` dan membentuk skema sementara hanya dalam memori.
 
-## Pekerjaan berikutnya
+### MariaDB terpisah
 
-1. Finalisasi transaksi: pasangan produk/jumlah, kode transaksi unik, penanganan request ulang, total/stok, dan pengujian concurrency.
-2. Uji CRUD serta migration pada MariaDB terpisah, termasuk perilaku collation dan foreign key.
-3. Terapkan migration `2026_10_18_000001_normalize_keterangan_on_kategoris_table` pada database utama **hanya setelah backup, pengujian MariaDB, dan persetujuan terpisah**. Pada database lokal existing `db_rpld`, kolom masih `VARCHAR(50) NOT NULL`; input kosong atau panjang belum aman sampai penyelarasan dilakukan.
-4. Migration korektif mengubah kolom menjadi `TEXT NULL`. Rollback penyempitan otomatis ditolak untuk menghindari kehilangan data.
-5. Implementasikan role kasir, pembuatan akun oleh admin, penonaktifan registrasi publik, dan batas akses riwayat transaksi. Transaksi saat ini belum memiliki identitas pembuat untuk membatasi riwayat per kasir.
-6. Selaraskan UTC/WIB setelah memeriksa timestamp historis; aplikasi saat ini menggunakan UTC.
-7. Sesuaikan pengujian bawaan yang masih mengharapkan penghapusan akun, lalu jalankan suite penuh.
+Suite MariaDB menggunakan `phpunit.mariadb.xml`, bukan mengubah guard SQLite. Siapkan database **`db_runway_testing`** yang hanya berisi fixture disposable dan akun lokal **`runway_testing`** dengan hak akses hanya pada database tersebut, tanpa grant option atau akses ke database bisnis.
 
-## Database dan keamanan repository
+Buat `.env.mariadb-testing` secara privat; file ini diabaikan Git. Guard membutuhkan `APP_ENV=testing`, `DB_CONNECTION=mariadb`, `DB_HOST=127.0.0.1`, `DB_DATABASE=db_runway_testing`, `DB_USERNAME=runway_testing`, dan `RUNWAY_MARIADB_TESTS=1`. Isi `DB_PORT`, password database dan APP_KEY khusus testing secara privat; `DB_URL` dan `DB_SOCKET` harus kosong. Nama akun pada guard adalah allowlist teknis, bukan kredensial yang dapat digunakan tanpa konfigurasi privat.
 
-Database lokal, dump, backup, `.env`, APP_KEY, password, token, dan autentikasi GitHub tidak disertakan dalam repository. `.env.example` hanya template konfigurasi tanpa kredensial rahasia. Dependency `vendor`, `node_modules`, file session/log, dan hasil build juga tidak diunggah.
+Pada database testing baru saja, `php tests/MariaDb/migrate.php` memverifikasi nama database aktif dan akun sebelum menyiapkan skema. Jangan menjalankan inisialisasi ini pada database bisnis. Setelah skema testing tersedia, regresi tanpa mengulang perubahan skema dijalankan dengan:
 
-Simpan backup di luar repository. Jangan memasukkan kredensial ke README, commit, URL remote, atau command line yang tersimpan dalam riwayat. Seeder tidak menyimpan password bawaan dan tidak dijalankan oleh pengujian terfokus di atas.
+```powershell
+$filter = '/^(?!.*(?:testCategoryCorrectionPreservesLegacyDataOnNativeMariaDb|testIdempotencyMigrationPreservesLegacySalesOnNativeMariaDb)).*$/'
+php vendor/phpunit/phpunit/phpunit -c phpunit.mariadb.xml --filter $filter --do-not-cache-result
+```
 
-## English summary
+Runner hanya memuat environment testing, memeriksa `SELECT DATABASE()` dan akun aktif, menolak URL/config override yang berbahaya, serta membuktikan akses akun testing ke database utama ditolak. Suite ini membersihkan fixture pada `db_runway_testing` setiap test; jangan gunakan database tersebut untuk data bisnis. Suite MariaDB penuh juga memuat pengujian perubahan skema kategori/idempotency dan hanya boleh dijalankan dengan izin perubahan skema testing.
 
-Runway is a Laravel POS work in progress. Six master-data modules, self-profile editing, and product PDF export have focused regression coverage: **87 passing tests / 658 assertions** on SQLite in memory. Basic sales transactions exist but still need finalization. Cashier access, MariaDB integration tests, and the category schema correction on the existing local database remain pending. Public registration is not disabled yet. Local databases, backups, environment secrets, and demo credentials are not distributed with this repository.
+Hasil di atas bukan klaim seluruh suite default project sudah lulus. Pengujian profil bawaan yang masih mengharapkan penghapusan akun perlu diselaraskan dengan kebijakan aplikasi.
+
+## Status dan rencana pengembangan
+
+- **Tersedia:** enam master, penjualan atomik, pengurangan stok, idempotency, detail/riwayat, PDF produk, dan presentasi WIB.
+- **Akses saat ini:** seluruh modul bisnis masih untuk Admin. Label `petugas.role` tidak memberikan hak akses akun login.
+- **Belum selesai:** akun kasir dan matriks permission, penonaktifan registrasi publik, serta audit pembuat transaksi. Route registrasi bawaan masih tersedia.
+- **Direncanakan:** relasi transaksi/pengguna dengan cabang, stok dan laporan per cabang, pembayaran/kembalian, struk, retur, shift, dan pelaporan operasional.
+
+Keberadaan master Cabang belum berarti isolasi multi-cabang sudah diterapkan. Project belum dinyatakan siap produksi.
+
+## Database existing dan keamanan repository
+
+Migration korektif kategori dan idempotency disertakan serta telah diuji pada MariaDB terisolasi. Untuk database existing, lakukan backup terverifikasi, audit pending migration, dan penerapan terbatas yang disetujui. Jangan menggunakan reset, seeding, atau `migrate:fresh` pada data bisnis. Rollback kategori menolak penyempitan otomatis; rollback idempotency menolak penghapusan kolom bila token sudah digunakan.
+
+Database lokal, data penjualan, dump SQL, backup, `.env`, `.env.mariadb-testing`, password, APP_KEY, token autentikasi, dan konfigurasi privat tidak disertakan. `.env.example` hanya template. Simpan backup di luar repository; file session, log, dan artefak pengujian lokal juga diabaikan Git. Tidak ada kredensial demo yang perlu dipublikasikan untuk menjalankan project.

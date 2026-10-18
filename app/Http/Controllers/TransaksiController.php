@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\CreateSale;
 use App\Models\Produk;
 use App\Models\Transaksi;
-use App\Models\TransaksiDetail;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class TransaksiController extends Controller
@@ -16,7 +17,7 @@ class TransaksiController extends Controller
      */
     public function index()
     {
-        $transaksis = Transaksi::latest()->paginate(10);
+        $transaksis = Transaksi::latest('id')->paginate(10);
         return view('transaksi.index', compact('transaksis'));
     }
 
@@ -25,61 +26,66 @@ class TransaksiController extends Controller
      */
     public function create()
     {
-        $produks = Produk::where('stok', '>', 0)->get();
-        return view('transaksi.create', compact('produks'));
+        $produks = Produk::where('stok', '>', 0)->orderBy('nama')->orderBy('id')->get();
+        $idempotencyKey = old('idempotency_key');
+        if (! is_string($idempotencyKey) || ! Str::isUuid($idempotencyKey)) {
+            $idempotencyKey = (string) Str::uuid();
+        }
+
+        return view('transaksi.create', compact('produks', 'idempotencyKey'));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, CreateSale $createSale)
     {
+        $integerInput = static function (string $attribute, mixed $value, \Closure $fail): void {
+            if (! is_int($value) && ! is_string($value)) {
+                $fail('Pilihan produk dan jumlah beli harus berupa bilangan bulat.');
+            }
+        };
+
         $validated = $request->validate([
-            'produk_id' => 'required|array|min:1',
-            'produk_id.*' => 'required|exists:produks,id',
-            'jumlah' => 'required|array',
-            'jumlah.*' => 'required|integer|min:1',
+            'idempotency_key' => 'bail|required|string|uuid',
+            'produk_id' => 'required|array|list|min:1|max:100',
+            'produk_id.*' => ['bail', 'required', $integerInput, 'integer', 'min:1', 'max:9223372036854775807'],
+            'jumlah' => 'required|array|list|min:1|max:100',
+            'jumlah.*' => ['bail', 'required', $integerInput, 'integer', 'min:1', 'max:2147483647'],
+        ], [
+            'idempotency_key.required' => 'Token pengajuan diperlukan. Muat ulang form transaksi.',
+            'idempotency_key.uuid' => 'Token pengajuan tidak valid. Muat ulang form transaksi.',
+            'idempotency_key.string' => 'Token pengajuan tidak valid. Muat ulang form transaksi.',
+            'produk_id.required' => 'Pilih minimal satu produk.',
+            'produk_id.array' => 'Daftar produk tidak valid.',
+            'produk_id.max' => 'Maksimal 100 baris produk per transaksi.',
+            'produk_id.*.integer' => 'Pilihan produk tidak valid.',
+            'produk_id.*.min' => 'Pilihan produk tidak valid.',
+            'produk_id.*.max' => 'Pilihan produk tidak valid.',
+            'jumlah.required' => 'Isi jumlah beli untuk setiap produk.',
+            'jumlah.array' => 'Daftar jumlah beli tidak valid.',
+            'jumlah.max' => 'Maksimal 100 baris produk per transaksi.',
+            'jumlah.*.integer' => 'Jumlah beli harus berupa bilangan bulat.',
+            'jumlah.*.min' => 'Jumlah beli minimal 1.',
+            'jumlah.*.max' => 'Jumlah beli melebihi batas yang diizinkan.',
+            'produk_id.list' => 'Susunan keranjang tidak valid. Pilih ulang produk.',
+            'jumlah.list' => 'Susunan jumlah beli tidak valid. Pilih ulang produk.',
         ]);
 
-        $transaksi = DB::transaction(function () use ($validated) {
-            $transaksi = Transaksi::create([
-                'kode_transaksi' => 'TRX-' . now()->format('Ymd-His'),
-                'total' => 0,
-            ]);
+        if (count($validated['produk_id']) !== count($validated['jumlah'])) {
+            throw ValidationException::withMessages(['jumlah' => 'Setiap produk harus memiliki tepat satu jumlah beli.']);
+        }
 
-            $total = 0;
+        try {
+            $sale = $createSale->handle($validated['produk_id'], $validated['jumlah'], $validated['idempotency_key'], (int) $request->user()->id);
+        } catch (QueryException $exception) {
+            report($exception);
+            throw ValidationException::withMessages(['transaksi' => 'Transaksi gagal disimpan. Tidak ada stok atau transaksi yang diubah. Silakan coba kembali.']);
+        }
 
-            foreach ($validated['produk_id'] as $index => $produkId) {
-                $jumlah = $validated['jumlah'][$index];
-                $produk = Produk::lockForUpdate()->findOrFail($produkId);
-
-                if ($jumlah > $produk->stok) {
-                    throw ValidationException::withMessages([
-                        'jumlah' => "Stok produk {$produk->nama} tidak mencukupi. Sisa stok: {$produk->stok}.",
-                    ]);
-                }
-
-                $subtotal = $produk->harga * $jumlah;
-
-                TransaksiDetail::create([
-                    'transaksi_id' => $transaksi->id,
-                    'produk_id' => $produk->id,
-                    'jumlah' => $jumlah,
-                    'harga_satuan' => $produk->harga,
-                    'subtotal' => $subtotal,
-                ]);
-
-                $produk->decrement('stok', $jumlah);
-
-                $total += $subtotal;
-            }
-
-            $transaksi->update(['total' => $total]);
-
-            return $transaksi;
-        });
-
-        return redirect()->route('transaksi.index')->with('success', 'Transaksi berhasil disimpan.');
+        return redirect()->route('transaksi.index')->with('success', $sale->wasRecentlyCreated
+            ? 'Transaksi berhasil disimpan.'
+            : 'Transaksi ini sudah tersimpan. Stok tidak dikurangi kembali.');
     }
 
     /**

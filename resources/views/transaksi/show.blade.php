@@ -13,10 +13,11 @@
                     </div>
                     <div class="text-right">
                         <p class="text-sm text-gray-500">Tanggal</p>
-                        <p class="text-lg font-semibold text-gray-800">{{ $transaksi->created_at->format('d/m/Y H:i') }}</p>
+                        <p class="text-lg font-semibold text-gray-800"><x-transaction-date :value="$transaksi->created_at" /></p>
                     </div>
                 </div>
 
+                <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse border border-gray-200">
                     <thead>
                         <tr class="bg-gray-100">
@@ -39,6 +40,7 @@
                         @endforelse
                     </tbody>
                 </table>
+                </div>
 
                 <div class="mt-4 flex justify-end">
                     <div class="text-right">

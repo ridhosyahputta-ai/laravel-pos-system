@@ -14,6 +14,7 @@
                     <a href="{{ route('transaksi.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">+ Buat Transaksi</a>
                 </div>
 
+                <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse border border-gray-200">
                     <thead>
                         <tr class="bg-gray-100">
@@ -30,7 +31,7 @@
                                 <td class="border p-3">{{ $transaksis->firstItem() + $index }}</td>
                                 <td class="border p-3">{{ $transaksi->kode_transaksi }}</td>
                                 <td class="border p-3">Rp {{ number_format($transaksi->total, 0, ',', '.') }}</td>
-                                <td class="border p-3">{{ $transaksi->created_at->format('d/m/Y H:i') }}</td>
+                                <td class="border p-3"><x-transaction-date :value="$transaksi->created_at" /></td>
                                 <td class="border p-3">
                                     <a href="{{ route('transaksi.show', $transaksi->id) }}" class="text-blue-600 hover:underline">Detail</a>
                                 </td>
@@ -40,6 +41,7 @@
                         @endforelse
                     </tbody>
                 </table>
+                </div>
                 <div class="mt-4">{{ $transaksis->links() }}</div>
             </div>
         </div>
