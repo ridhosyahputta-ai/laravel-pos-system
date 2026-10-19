@@ -5,40 +5,59 @@
             <div class="flex">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}">
+                    <a href="{{ route(auth()->user()->hasRole('admin') ? 'dashboard' : 'transaksi.index') }}">
                         <x-application-logo class="text-xl" />
                     </a>
                 </div>
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                    @role('admin')
+<x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('produk.index')" :active="request()->routeIs('produk.*')">
+@endrole
+                    @role('admin')
+<x-nav-link :href="route('produk.index')" :active="request()->routeIs('produk.*')">
                         {{ __('Produk') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('transaksi.index')" :active="request()->routeIs('transaksi.*')">
+@endrole
+                    @if(auth()->user()->hasAnyRole(['admin', 'kasir']))
+<x-nav-link :href="route('transaksi.index')" :active="request()->routeIs('transaksi.*')">
                         {{ __('Transaksi') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('kategori.index')" :active="request()->routeIs('kategori.*')">
+@endif
+                    @role('admin')
+<x-nav-link :href="route('kategori.index')" :active="request()->routeIs('kategori.*')">
                         {{ __('Kategori') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('supplier.index')" :active="request()->routeIs('supplier.*')">
+@endrole
+                    @role('admin')
+<x-nav-link :href="route('supplier.index')" :active="request()->routeIs('supplier.*')">
                         {{ __('Supplier') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('pelanggan.index')" :active="request()->routeIs('pelanggan.*')">
+@endrole
+                    @role('admin')
+<x-nav-link :href="route('pelanggan.index')" :active="request()->routeIs('pelanggan.*')">
                         {{ __('Pelanggan') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('cabang.index')" :active="request()->routeIs('cabang.*')">
+@endrole
+                    @role('admin')
+<x-nav-link :href="route('cabang.index')" :active="request()->routeIs('cabang.*')">
                         {{ __('Cabang') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('petugas.index')" :active="request()->routeIs('petugas.*')">
+@endrole
+                    @role('admin')
+<x-nav-link :href="route('petugas.index')" :active="request()->routeIs('petugas.*')">
                         {{ __('Petugas') }}
                     </x-nav-link>
+@endrole
                 </div>
             </div>
 
+            @role('admin')
+            <a href="{{ route('kasir.index') }}" class="self-center px-3 text-blue-600">Akun Kasir</a>
+            @endrole
             <!-- Settings Dropdown -->
             <div class="hidden sm:flex sm:items-center sm:ms-6">
                 <x-dropdown align="right" width="48">
@@ -88,30 +107,46 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+            @role('admin')
+<x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('produk.index')" :active="request()->routeIs('produk.*')">
+@endrole
+            @role('admin')
+<x-responsive-nav-link :href="route('produk.index')" :active="request()->routeIs('produk.*')">
                 {{ __('Produk') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('transaksi.index')" :active="request()->routeIs('transaksi.*')">
+@endrole
+            @if(auth()->user()->hasAnyRole(['admin', 'kasir']))
+<x-responsive-nav-link :href="route('transaksi.index')" :active="request()->routeIs('transaksi.*')">
                 {{ __('Transaksi') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('kategori.index')" :active="request()->routeIs('kategori.*')">
+@endif
+            @role('admin')
+<x-responsive-nav-link :href="route('kategori.index')" :active="request()->routeIs('kategori.*')">
                 {{ __('Kategori') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('supplier.index')" :active="request()->routeIs('supplier.*')">
+@endrole
+            @role('admin')
+<x-responsive-nav-link :href="route('supplier.index')" :active="request()->routeIs('supplier.*')">
                 {{ __('Supplier') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('pelanggan.index')" :active="request()->routeIs('pelanggan.*')">
+@endrole
+            @role('admin')
+<x-responsive-nav-link :href="route('pelanggan.index')" :active="request()->routeIs('pelanggan.*')">
                 {{ __('Pelanggan') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('cabang.index')" :active="request()->routeIs('cabang.*')">
+@endrole
+            @role('admin')
+<x-responsive-nav-link :href="route('cabang.index')" :active="request()->routeIs('cabang.*')">
                 {{ __('Cabang') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('petugas.index')" :active="request()->routeIs('petugas.*')">
+@endrole
+            @role('admin')
+<x-responsive-nav-link :href="route('petugas.index')" :active="request()->routeIs('petugas.*')">
                 {{ __('Petugas') }}
             </x-responsive-nav-link>
+@endrole
         </div>
 
         <!-- Responsive Settings Options -->

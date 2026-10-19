@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cabang;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 
 class CabangController extends Controller
@@ -10,6 +11,7 @@ class CabangController extends Controller
     public function index()
     {
         $cabangs = Cabang::latest()->paginate(10);
+
         return view('cabang.index', compact('cabangs'));
     }
 
@@ -43,7 +45,18 @@ class CabangController extends Controller
 
     public function destroy(Cabang $cabang)
     {
-        $cabang->delete();
+        if ($cabang->users()->exists() || $cabang->transaksis()->exists()) {
+            return back()->withErrors(['cabang' => 'Cabang masih digunakan akun atau transaksi dan tidak dapat dihapus.']);
+        }
+        try {
+            $cabang->delete();
+        } catch (QueryException $exception) {
+            if (($exception->errorInfo[1] ?? null) !== 1451 && ($exception->errorInfo[0] ?? null) !== '23000') {
+                throw $exception;
+            }
+
+            return back()->withErrors(['cabang' => 'Cabang masih digunakan dan tidak dapat dihapus.']);
+        }
 
         return redirect()->route('cabang.index')->with('success', 'Cabang berhasil dihapus.');
     }

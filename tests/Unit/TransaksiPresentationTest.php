@@ -5,12 +5,15 @@ namespace Tests\Unit;
 use App\Models\Produk;
 use App\Models\Transaksi;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\ViewErrorBag;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 // Presentation fixtures live only in memory. No RefreshDatabase or migrations.
@@ -19,12 +22,14 @@ final class TransaksiPresentationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Auth::guard('web')->setUser(new User(['name' => 'Preview Admin', 'email' => 'preview@example.invalid']));
-        view()->share('errors', new \Illuminate\Support\ViewErrorBag);
+        $user = new User(['name' => 'Preview Admin', 'email' => 'preview@example.invalid']);
+        $user->setRelation('roles', new Collection([new Role(['name' => 'admin', 'guard_name' => 'web'])]));
+        Auth::guard('web')->setUser($user);
+        view()->share('errors', new ViewErrorBag);
         DB::enableQueryLog();
     }
 
-    public function testQuantityConstraintsAndIdempotencyArePresentInTheRenderedForm(): void
+    public function test_quantity_constraints_and_idempotency_are_present_in_the_rendered_form(): void
     {
         $product = new Produk(['nama' => 'Preview', 'harga' => 12500, 'stok' => 3]);
         $product->id = 7;
@@ -56,7 +61,7 @@ final class TransaksiPresentationTest extends TestCase
     }
 
     #[DataProvider('utcDates')]
-    public function testWibConversionDoesNotMutateTheSourceDateOrGlobalTimezone(string $utc, string $expected, string $iso): void
+    public function test_wib_conversion_does_not_mutate_the_source_date_or_global_timezone(string $utc, string $expected, string $iso): void
     {
         $date = Carbon::parse($utc, 'UTC');
         $html = Blade::render('<x-transaction-date :value="$date" />', ['date' => $date]);
@@ -68,7 +73,7 @@ final class TransaksiPresentationTest extends TestCase
         $this->assertSame([], DB::getQueryLog());
     }
 
-    public function testBothTransactionViewsDisplayWibWithoutMutatingTheModel(): void
+    public function test_both_transaction_views_display_wib_without_mutating_the_model(): void
     {
         $sale = new Transaksi;
         $sale->setRawAttributes(['id' => 7, 'kode_transaksi' => 'MEMORY-ONLY', 'total' => '25000.00', 'created_at' => '2026-10-18 18:30:00'], true);
@@ -84,7 +89,7 @@ final class TransaksiPresentationTest extends TestCase
         $this->assertSame([], DB::getQueryLog());
     }
 
-    public function testLegacyMissingDatesHaveANeutralPlaceholder(): void
+    public function test_legacy_missing_dates_have_a_neutral_placeholder(): void
     {
         $html = Blade::render('<x-transaction-date :value="$date" />', ['date' => null]);
         $this->assertStringContainsString('—', $html);

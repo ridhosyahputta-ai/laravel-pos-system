@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Models\Produk;
 use App\Models\Transaksi;
+use App\Models\User;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -39,11 +40,14 @@ class CreateSale
 
         for ($attempt = 0; $attempt < 3; $attempt++) {
             try {
-                return DB::transaction(function () use ($cart, $idempotencyKey, $requestHash) {
+                return DB::transaction(function () use ($cart, $idempotencyKey, $requestHash, $userId) {
                     // Claim the token BEFORE stock checks/locks. InnoDB's unique
                     // index serializes concurrent submissions, even for disjoint
                     // carts. The claim rolls back together with every sale write.
+                    $actor = User::findOrFail($userId);
                     $sale = Transaksi::create([
+                        'user_id' => $actor->id,
+                        'cabang_id' => $actor->cabang_id,
                         'kode_transaksi' => 'TRX-'.Str::uuid(),
                         'total' => 0,
                         'idempotency_key' => $idempotencyKey,

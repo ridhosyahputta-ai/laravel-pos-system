@@ -1,19 +1,10 @@
 <?php
 
-test('registration screen can be rendered', function () {
-    $response = $this->get('/register');
+use App\Models\User;
 
-    $response->assertStatus(200);
-});
-
-test('new users can register', function () {
-    $response = $this->post('/register', [
-        'name' => 'Test User',
-        'email' => 'test@example.com',
-        'password' => 'password',
-        'password_confirmation' => 'password',
-    ]);
-
-    $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard', absolute: false));
+test('public registration is disabled', function () {
+    $this->get('/register')->assertNotFound();
+    $this->post('/register', ['name' => 'Blocked', 'email' => 'blocked@example.test', 'password' => 'password', 'password_confirmation' => 'password'])->assertNotFound();
+    expect(User::count())->toBe(0);
+    $this->get('/')->assertDontSee('href="'.url('/register').'"', false);
 });

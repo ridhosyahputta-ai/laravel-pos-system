@@ -38,7 +38,7 @@ final class TransactionTest extends TestCase
     public function testMigrationsAndNativeSchema(): void
     {
         $this->assertSame('db_runway_testing', DB::selectOne('SELECT DATABASE() AS db')->db);
-        $this->assertSame(18, DB::table('migrations')->count());
+        $this->assertSame(19, DB::table('migrations')->count());
         foreach (['produks', 'transaksis', 'transaksi_details'] as $table) {
             $row = DB::selectOne('SELECT ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=?', [$table]);
             $this->assertSame('InnoDB', $row->engine);

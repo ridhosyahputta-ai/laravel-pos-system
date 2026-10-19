@@ -2,14 +2,16 @@
 
 Runway adalah aplikasi Point of Sale berbasis Laravel untuk mengelola master data, mencatat penjualan, dan mengurangi stok secara otomatis. Project ini dikembangkan sebagai portofolio dengan fokus pada konsistensi data, validasi backend, dan pengujian transaksi.
 
-**Multi-branch merupakan arah pengembangan, belum implementasi operasional yang selesai.** Master Cabang sudah tersedia, tetapi pemisahan stok, transaksi, pengguna, dan laporan per cabang masih direncanakan.
+**Multi-branch merupakan arah pengembangan, belum implementasi operasional yang selesai.** Master Cabang, penempatan satu Kasir ke satu Cabang, serta pencatatan pengguna dan cabang transaksi sudah tersedia. **Stok masih global**; stok per cabang dan laporan multi-cabang belum tersedia.
 
 ## Fitur yang tersedia
 
-- Login Admin, dashboard jumlah master data dan produk dengan stok rendah.
+- Login Admin dan Kasir menggunakan role Spatie. Dashboard jumlah master data dan produk dengan stok rendah khusus Admin.
+- Admin dapat membuat, mengedit, dan menonaktifkan akun Kasir; password di-hash dan role ditetapkan backend. Satu Kasir wajib ditempatkan pada satu Cabang.
+- Akun nonaktif ditolak saat login dan pada request berikutnya, termasuk session lama. Registrasi publik dinonaktifkan.
 - Profil sendiri: perubahan nama/email dan password dengan verifikasi password saat ini. Penghapusan akun sendiri dinonaktifkan.
 - Enam modul master data dengan CRUD, validasi, pagination, dan proteksi relasi.
-- Penjualan satu atau beberapa produk, riwayat, dan detail transaksi.
+- Penjualan satu atau beberapa produk, riwayat, dan detail transaksi. Admin melihat seluruh transaksi; Kasir hanya melihat transaksi miliknya.
 - Ekspor daftar produk ke PDF.
 - Antarmuka Blade dengan branding Runway, Tailwind CSS, dan Alpine.js.
 
@@ -19,8 +21,12 @@ Runway adalah aplikasi Point of Sale berbasis Laravel untuk mengelola master dat
 | Kategori | Nama dan keterangan opsional hingga 2.000 karakter |
 | Supplier | Nama, kontak, alamat, dan relasi produk |
 | Pelanggan | Nama, nomor telepon, dan alamat |
-| Cabang | Nama cabang dan lokasi sebagai master data |
-| Petugas | Nama, username unik, dan label peran master data |
+| Cabang | Nama cabang dan lokasi; penghapusan dibatasi jika masih direferensikan akun atau transaksi |
+| Petugas | Nama, username unik, dan label peran master data; terpisah dari akun login |
+
+Akses master data, ekspor PDF produk, dan pengelolaan Kasir hanya untuk Admin. Admin dan Kasir aktif dapat membuat transaksi; Kasir tanpa Cabang dan pengguna tanpa role tidak dapat mengakses fitur penjualan. Profil/password sendiri tetap tersedia, sedangkan penghapusan akun sendiri dinonaktifkan.
+
+Fondasi akun Kasir telah diimplementasikan dan diuji otomatis. **Pengujian manual akun Kasir melalui browser belum selesai.**
 
 ## Transaksi dan integritas stok
 
@@ -33,6 +39,8 @@ Setiap pengajuan menggunakan token idempotency unik. Pengiriman ulang token deng
 Form menolak jumlah kosong, pecahan, nol, negatif, atau melebihi stok. Estimasi tidak valid diberi petunjuk perbaikan dan tombol simpan tetap terkunci selama pengiriman. Total browser adalah estimasi; backend tetap memeriksa semua nilai. Perhitungan mengikuti harga produk dalam rupiah utuh dan kapasitas kolom database.
 
 Tanggal pada daftar dan detail ditampilkan dalam **Asia/Jakarta (WIB)**. Konversi hanya dilakukan pada lapisan presentasi; timezone global aplikasi tetap UTC dan nilai tersimpan tidak diubah. Alur penjualan juga telah diverifikasi manual pada lingkungan pengembangan lokal.
+
+Transaksi baru mencatat `user_id` dan `cabang_id` dari akun yang login, bukan dari input browser. Cabang transaksi menyimpan riwayat saat penjualan dan tidak berubah ketika penempatan Kasir dipindahkan. Transaksi lama tetap utuh dengan relasi nullable, tanpa menebak pengguna/cabang; aksesnya tetap untuk Admin. Fingerprint idempotency lama dipertahankan.
 
 Implementasi utama: [CreateSale](app/Actions/CreateSale.php), [TransaksiController](app/Http/Controllers/TransaksiController.php), dan [komponen tanggal](resources/views/components/transaction-date.blade.php).
 
@@ -85,7 +93,7 @@ Jangan membuat ulang APP_KEY pada instalasi yang sudah berjalan. Script `compose
 
 Repository tidak menyediakan akun demo, password default, atau salinan akun lokal. Pada database development baru, provisioning Admin melalui `DatabaseSeeder` memerlukan `SEED_ADMIN_NAME`, `SEED_ADMIN_EMAIL`, dan `SEED_ADMIN_PASSWORD` yang diisi secara privat. Model Laravel melakukan hashing password.
 
-Setelah target database kosong dan konfigurasi privat dipastikan, provisioning dapat dilakukan secara eksplisit dengan `php artisan db:seed --class=DatabaseSeeder`. Ini bukan langkah otomatis, dan bukan cara mereset password pada database existing. UI pembuatan akun kasir oleh Admin belum tersedia.
+Setelah target database kosong dan konfigurasi privat dipastikan, provisioning dapat dilakukan secara eksplisit dengan `php artisan db:seed --class=DatabaseSeeder`. Ini bukan langkah otomatis, dan bukan cara mereset password pada database existing. Setelah login sebagai Admin, buat master Cabang terlebih dahulu, lalu gunakan menu **Akun Kasir** untuk membuat akun. Form menampilkan petunjuk dan menonaktifkan penyimpanan jika belum ada Cabang. Tidak ada Cabang atau Kasir yang dibuat otomatis.
 
 ## Menjalankan lokal
 
@@ -111,15 +119,17 @@ Untuk mengembangkan aset, jalankan `npm run dev` pada terminal terpisah. Checkou
 
 ## Pengujian dan isolasi
 
-Hasil regresi terfokus terakhir untuk finalisasi Tahap 3, tanpa migration tambahan:
+Hasil regresi terakhir untuk finalisasi Tahap 4.1:
 
 | Suite | Test lulus | Assertions |
 | --- | ---: | ---: |
-| Presentasi pada SQLite `:memory:` | 6 | 38 |
-| MariaDB terisolasi, tanpa mengulang tes migration | 21 | 182 |
+| Regresi backend dan presentasi pada SQLite `:memory:` | 226 | 1.380 |
+| Fondasi Kasir pada MariaDB terisolasi dengan rollback | 4 | 33 |
 | JavaScript form dengan DOM fixture | 17 | Tidak dihitung oleh Node sebagai assertions terpisah |
 
-Cakupan MariaDB mencakup CRUD enam master, akses Admin, PDF, harga backend, stok, rollback, token idempotency, nomor unik, dua proses dengan token sama, perebutan stok dengan token berbeda, serta deadlock InnoDB nyata dan retry. Worker menggunakan proses PHP dan koneksi database terpisah; hasil konkurensi tidak didasarkan pada simulasi SQLite.
+Regresi SQLite mencakup autentikasi Admin/Kasir, registrasi yang dinonaktifkan, akun nonaktif dan session lama, validasi pengelolaan Kasir, pembatasan endpoint Admin, kepemilikan transaksi, manipulasi input, data lama, idempotency, dan enam master data. Empat test MariaDB terbaru memeriksa skema/foreign key native, kepemilikan transaksi, idempotency, stok, rollback, serta akun nonaktif dengan perubahan fixture yang di-rollback.
+
+Suite MariaDB transaksi dari Tahap 3 juga tersedia untuk CRUD enam master, PDF, harga backend, nomor unik, dua proses dengan token sama, perebutan stok, serta deadlock InnoDB nyata dan retry. Pengujian konkurensi tersebut menggunakan proses PHP dan koneksi terpisah, bukan simulasi SQLite; suite itu tidak diulang dalam finalisasi Tahap 4.1 karena membersihkan fixture existing.
 
 Pengujian presentasi mencakup batas form, CSRF/token, tanggal WIB termasuk pergantian hari/tahun, dan pelestarian nilai UTC. Test JavaScript menjalankan script form yang sebenarnya dengan DOM fixture untuk input tidak valid, estimasi, penguncian submit, dan pemulihan back-forward cache. Ini bukan pengganti pengujian browser interaktif.
 
@@ -137,11 +147,11 @@ $env:SESSION_DRIVER = 'array'
 $env:QUEUE_CONNECTION = 'sync'
 $env:MAIL_MAILER = 'array'
 
-php vendor/pestphp/pest/bin/pest tests/Unit/TransaksiPresentationTest.php --no-coverage --do-not-cache-result
+php vendor/pestphp/pest/bin/pest --no-coverage --do-not-cache-result
 node --test tests/Frontend/transaction-form.test.cjs
 ```
 
-`tests/TestCase.php` menolak database di luar SQLite `:memory:`, lingkungan non-testing, dan konfigurasi cache sebelum setup database test. Suite backend yang lebih luas tersedia pada `tests/Feature/ProdukKategoriTest.php`, `MasterDataCrudTest.php`, `TransaksiTest.php`, dan `TransaksiIdempotencyTest.php`; suite Feature menggunakan `RefreshDatabase` dan membentuk skema sementara hanya dalam memori.
+`tests/TestCase.php` menolak database di luar SQLite `:memory:`, lingkungan non-testing, dan konfigurasi cache sebelum setup database test. Suite backend yang lebih luas tersedia pada `tests/Feature/ProdukKategoriTest.php`, `MasterDataCrudTest.php`, `TransaksiTest.php`, `TransaksiIdempotencyTest.php`, dan `CashierFoundationTest.php`; suite Feature menggunakan `RefreshDatabase` dan membentuk skema sementara hanya dalam memori.
 
 ### MariaDB terpisah
 
@@ -149,28 +159,27 @@ Suite MariaDB menggunakan `phpunit.mariadb.xml`, bukan mengubah guard SQLite. Si
 
 Buat `.env.mariadb-testing` secara privat; file ini diabaikan Git. Guard membutuhkan `APP_ENV=testing`, `DB_CONNECTION=mariadb`, `DB_HOST=127.0.0.1`, `DB_DATABASE=db_runway_testing`, `DB_USERNAME=runway_testing`, dan `RUNWAY_MARIADB_TESTS=1`. Isi `DB_PORT`, password database dan APP_KEY khusus testing secara privat; `DB_URL` dan `DB_SOCKET` harus kosong. Nama akun pada guard adalah allowlist teknis, bukan kredensial yang dapat digunakan tanpa konfigurasi privat.
 
-Pada database testing baru saja, `php tests/MariaDb/migrate.php` memverifikasi nama database aktif dan akun sebelum menyiapkan skema. Jangan menjalankan inisialisasi ini pada database bisnis. Setelah skema testing tersedia, regresi tanpa mengulang perubahan skema dijalankan dengan:
+Pada database testing baru saja, `php tests/MariaDb/migrate.php` memverifikasi nama database aktif dan akun sebelum menyiapkan skema. Jangan menjalankan inisialisasi ini pada database bisnis. Setelah skema testing tersedia, pengujian fondasi Kasir yang mempertahankan baris existing dijalankan dengan:
 
 ```powershell
-$filter = '/^(?!.*(?:testCategoryCorrectionPreservesLegacyDataOnNativeMariaDb|testIdempotencyMigrationPreservesLegacySalesOnNativeMariaDb)).*$/'
-php vendor/phpunit/phpunit/phpunit -c phpunit.mariadb.xml --filter $filter --do-not-cache-result
+php vendor/phpunit/phpunit/phpunit -c phpunit.mariadb.xml tests/MariaDb/CashierFoundationTest.php --do-not-cache-result
 ```
 
-Runner hanya memuat environment testing, memeriksa `SELECT DATABASE()` dan akun aktif, menolak URL/config override yang berbahaya, serta membuktikan akses akun testing ke database utama ditolak. Suite ini membersihkan fixture pada `db_runway_testing` setiap test; jangan gunakan database tersebut untuk data bisnis. Suite MariaDB penuh juga memuat pengujian perubahan skema kategori/idempotency dan hanya boleh dijalankan dengan izin perubahan skema testing.
+Runner hanya memuat environment testing, memeriksa `SELECT DATABASE()` dan akun aktif, menolak URL/config override yang berbahaya, serta membuktikan akses akun testing ke database utama ditolak. `CashierFoundationTest` memakai transaksi dan rollback tanpa menghapus baris existing. Suite MariaDB lama membersihkan fixture pada `db_runway_testing` setiap test; jangan menjalankan seluruh suite pada data yang harus dipertahankan. Suite penuh juga memuat pengujian perubahan skema kategori/idempotency dan hanya boleh dijalankan dengan izin perubahan skema serta pembersihan fixture testing.
 
-Hasil di atas bukan klaim seluruh suite default project sudah lulus. Pengujian profil bawaan yang masih mengharapkan penghapusan akun perlu diselaraskan dengan kebijakan aplikasi.
+Seluruh suite default SQLite lulus; pengujian registrasi dan penghapusan akun telah diselaraskan dengan kebijakan POS internal. Hasil otomatis tidak menggantikan pengujian manual melalui browser.
 
 ## Status dan rencana pengembangan
 
-- **Tersedia:** enam master, penjualan atomik, pengurangan stok, idempotency, detail/riwayat, PDF produk, dan presentasi WIB.
-- **Akses saat ini:** seluruh modul bisnis masih untuk Admin. Label `petugas.role` tidak memberikan hak akses akun login.
-- **Belum selesai:** akun kasir dan matriks permission, penonaktifan registrasi publik, serta audit pembuat transaksi. Route registrasi bawaan masih tersedia.
-- **Direncanakan:** relasi transaksi/pengguna dengan cabang, stok dan laporan per cabang, pembayaran/kembalian, struk, retur, shift, dan pelaporan operasional.
+- **Tersedia:** enam master, penjualan atomik, pengurangan stok global, idempotency, detail/riwayat, PDF produk, presentasi WIB, pengelolaan Kasir, status aktif/nonaktif, dan atribusi pengguna/cabang transaksi.
+- **Akses saat ini:** Admin mengelola sistem; Kasir aktif dengan Cabang dapat menjual dan hanya melihat transaksi miliknya. Label `petugas.role` tidak memberikan hak akses akun login. Registrasi publik dinonaktifkan.
+- **Belum selesai:** pengujian manual akun Kasir melalui browser dan validasi alur operasional end-to-end.
+- **Direncanakan:** stok per cabang, isolasi operasional dan laporan multi-cabang, pembayaran/kembalian, struk, retur, shift, dan pelaporan operasional.
 
 Keberadaan master Cabang belum berarti isolasi multi-cabang sudah diterapkan. Project belum dinyatakan siap produksi.
 
 ## Database existing dan keamanan repository
 
-Migration korektif kategori dan idempotency disertakan serta telah diuji pada MariaDB terisolasi. Untuk database existing, lakukan backup terverifikasi, audit pending migration, dan penerapan terbatas yang disetujui. Jangan menggunakan reset, seeding, atau `migrate:fresh` pada data bisnis. Rollback kategori menolak penyempitan otomatis; rollback idempotency menolak penghapusan kolom bila token sudah digunakan.
+Migration korektif kategori, idempotency, dan fondasi Kasir disertakan serta telah diuji pada MariaDB terisolasi. Migration fondasi Kasir mempertahankan data lama, memberi default akun aktif, dan menggunakan foreign key dengan pembatasan penghapusan. Relasi nullable tidak diisi otomatis; rollback fondasi Kasir akan menghapus metadata kolom baru sehingga tidak boleh digunakan sebagai pemulihan otomatis. Untuk database existing, lakukan backup terverifikasi, audit pending migration, dan penerapan terbatas yang disetujui. Jangan menggunakan reset, seeding, atau `migrate:fresh` pada data bisnis. Rollback kategori menolak penyempitan otomatis; rollback idempotency menolak penghapusan kolom bila token sudah digunakan.
 
 Database lokal, data penjualan, dump SQL, backup, `.env`, `.env.mariadb-testing`, password, APP_KEY, token autentikasi, dan konfigurasi privat tidak disertakan. `.env.example` hanya template. Simpan backup di luar repository; file session, log, dan artefak pengujian lokal juga diabaikan Git. Tidak ada kredensial demo yang perlu dipublikasikan untuk menjalankan project.

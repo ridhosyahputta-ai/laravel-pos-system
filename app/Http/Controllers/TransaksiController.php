@@ -15,9 +15,14 @@ class TransaksiController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $transaksis = Transaksi::latest('id')->paginate(10);
+        $query = Transaksi::query();
+        if (! $request->user()->hasRole('admin')) {
+            $query->where('user_id', $request->user()->id);
+        }
+        $transaksis = $query->latest('id')->paginate(10);
+
         return view('transaksi.index', compact('transaksis'));
     }
 
@@ -91,9 +96,11 @@ class TransaksiController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Transaksi $transaksi)
+    public function show(Request $request, Transaksi $transaksi)
     {
+        abort_unless($request->user()->hasRole('admin') || $transaksi->user_id === $request->user()->id, 403);
         $transaksi->load('detail.produk');
+
         return view('transaksi.show', compact('transaksi'));
     }
 }

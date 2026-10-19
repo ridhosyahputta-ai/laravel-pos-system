@@ -28,6 +28,21 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        $user = $request->user();
+        if (! $user->hasAnyRole(['admin', 'kasir']) || (! $user->hasRole('admin') && ! $user->cabang_id)) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return back()->withErrors(['email' => 'Akun belum memiliki akses. Hubungi Admin.']);
+        }
+        // Ignore stale intended Admin URLs when a cashier signs in.
+        if (! $user->hasRole('admin')) {
+            $request->session()->forget('url.intended');
+
+            return redirect()->route('transaksi.index');
+        }
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 

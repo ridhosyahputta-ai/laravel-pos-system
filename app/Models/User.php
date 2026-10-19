@@ -9,13 +9,14 @@ use Spatie\Permission\Traits\HasRoles; // <-- 1. Import ini
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasRoles; // <-- 2. Pasang HasRoles di sini
+    use HasFactory, HasRoles, Notifiable; // <-- 2. Pasang HasRoles di sini
 
     protected $fillable = [
         'name',
         'email',
         'password',
-        'role',
+        'cabang_id',
+        'is_active',
     ];
 
     protected $hidden = [
@@ -23,11 +24,17 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    public function cabang()
+    {
+        return $this->belongsTo(Cabang::class);
+    }
+
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
     }
 }
