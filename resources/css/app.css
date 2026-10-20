@@ -1,3 +1,33 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+    .master-control {
+        @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100;
+        color-scheme: light;
+    }
+    .master-page textarea.master-control { @apply min-h-28 resize-y; }
+    .master-form > div { min-width: 0; }
+    .master-form > div:has(textarea), .master-form > div:last-child { grid-column: 1 / -1; }
+    .master-btn { @apply inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-lg border px-4 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50; }
+    .master-btn-primary { @apply border-blue-600 bg-blue-600 text-white shadow-sm hover:border-blue-700 hover:bg-blue-700; }
+    .master-btn-secondary { @apply border-slate-300 bg-white text-slate-700 hover:bg-slate-50; }
+    .master-action { @apply inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-400; }
+    .master-action-edit { @apply bg-blue-50 text-blue-700 hover:bg-blue-100; }
+    .master-action-delete { @apply bg-red-50 text-red-700 hover:bg-red-100; }
+    .master-table th { @apply whitespace-nowrap bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500; }
+    .master-table tbody tr { @apply border-t border-slate-100 transition hover:bg-slate-50; }
+    .master-table td { @apply px-4 py-3.5 align-middle text-slate-700; max-width: 24rem; overflow-wrap: anywhere; }
+    .master-table td[colspan] { @apply py-12; max-width: none; }
+    .master-table td:last-child { @apply whitespace-nowrap; }
+    .master-page-link { @apply inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500; }
+    .master-page-current { @apply inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg border border-blue-600 bg-blue-600 px-3 py-1.5 font-semibold text-white; }
+    .master-page-disabled { @apply inline-flex min-h-9 items-center justify-center rounded-lg border border-slate-100 px-3 py-1.5 text-slate-400; }
+}
+
+@layer components {
+    .master-page.bg-slate-50 { background-color: #e2e8f0; }
+    .master-page .bg-white { background-color: #e8eef5; }
+    .master-page .master-control:not(:disabled) { background-color: #f1f5f9; }
+}

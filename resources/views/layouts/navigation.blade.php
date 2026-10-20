@@ -1,8 +1,8 @@
 <nav x-data="{ open: false }" class="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex">
+        <div class="flex items-stretch justify-between h-16 gap-4">
+            <div class="flex min-w-0 flex-1">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route(auth()->user()->hasRole('admin') ? 'dashboard' : 'transaksi.index') }}">
@@ -11,59 +11,43 @@
                 </div>
 
                 <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                <div data-navigation="desktop" class="hidden xl:flex items-stretch space-x-4 ms-6 whitespace-nowrap">
                     @role('admin')
-<x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
-@endrole
+                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="whitespace-nowrap">Dashboard</x-nav-link>
+                    @endrole
                     @role('admin')
-<x-nav-link :href="route('produk.index')" :active="request()->routeIs('produk.*')">
-                        {{ __('Produk') }}
-                    </x-nav-link>
-@endrole
+                    <x-nav-link :href="route('produk.index')" :active="request()->routeIs('produk.*')" class="whitespace-nowrap">Produk</x-nav-link>
+                    @endrole
                     @if(auth()->user()->hasAnyRole(['admin', 'kasir']))
-<x-nav-link :href="route('transaksi.index')" :active="request()->routeIs('transaksi.*')">
-                        {{ __('Transaksi') }}
-                    </x-nav-link>
-@endif
+                    <x-nav-link :href="route('transaksi.index')" :active="request()->routeIs('transaksi.*')" class="whitespace-nowrap">Transaksi</x-nav-link>
+                    @endif
                     @role('admin')
-<x-nav-link :href="route('kategori.index')" :active="request()->routeIs('kategori.*')">
-                        {{ __('Kategori') }}
-                    </x-nav-link>
-@endrole
+                    <x-nav-link :href="route('kategori.index')" :active="request()->routeIs('kategori.*')" class="whitespace-nowrap">Kategori</x-nav-link>
+                    @endrole
                     @role('admin')
-<x-nav-link :href="route('supplier.index')" :active="request()->routeIs('supplier.*')">
-                        {{ __('Supplier') }}
-                    </x-nav-link>
-@endrole
+                    <x-nav-link :href="route('supplier.index')" :active="request()->routeIs('supplier.*')" class="whitespace-nowrap">Supplier</x-nav-link>
+                    @endrole
                     @role('admin')
-<x-nav-link :href="route('pelanggan.index')" :active="request()->routeIs('pelanggan.*')">
-                        {{ __('Pelanggan') }}
-                    </x-nav-link>
-@endrole
+                    <x-nav-link :href="route('pelanggan.index')" :active="request()->routeIs('pelanggan.*')" class="whitespace-nowrap">Pelanggan</x-nav-link>
+                    @endrole
                     @role('admin')
-<x-nav-link :href="route('cabang.index')" :active="request()->routeIs('cabang.*')">
-                        {{ __('Cabang') }}
-                    </x-nav-link>
-@endrole
+                    <x-nav-link :href="route('cabang.index')" :active="request()->routeIs('cabang.*')" class="whitespace-nowrap">Cabang</x-nav-link>
+                    @endrole
                     @role('admin')
-<x-nav-link :href="route('petugas.index')" :active="request()->routeIs('petugas.*')">
-                        {{ __('Petugas') }}
-                    </x-nav-link>
-@endrole
+                    <x-nav-link :href="route('petugas.index')" :active="request()->routeIs('petugas.*')" class="whitespace-nowrap">Petugas</x-nav-link>
+                    @endrole
+                    @role('admin')
+                    <x-nav-link :href="route('kasir.index')" :active="request()->routeIs('kasir.*')" class="whitespace-nowrap">Akun Kasir</x-nav-link>
+                    @endrole
                 </div>
             </div>
 
-            @role('admin')
-            <a href="{{ route('kasir.index') }}" class="self-center px-3 text-blue-600">Akun Kasir</a>
-            @endrole
             <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
+            <div class="hidden xl:flex items-center shrink-0">
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
-                            <div>{{ Auth::user()->name }}</div>
+                            <div class="max-w-32 truncate">{{ Auth::user()->name }}</div>
 
                             <div class="ms-1">
                                 <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
@@ -93,7 +77,7 @@
             </div>
 
             <!-- Hamburger -->
-            <div class="-me-2 flex items-center sm:hidden">
+            <div class="-me-2 flex items-center xl:hidden">
                 <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-500 dark:focus:text-gray-400 transition duration-150 ease-in-out">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                         <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
@@ -105,48 +89,35 @@
     </div>
 
     <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
-        <div class="pt-2 pb-3 space-y-1">
-            @role('admin')
-<x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                {{ __('Dashboard') }}
-            </x-responsive-nav-link>
-@endrole
-            @role('admin')
-<x-responsive-nav-link :href="route('produk.index')" :active="request()->routeIs('produk.*')">
-                {{ __('Produk') }}
-            </x-responsive-nav-link>
-@endrole
-            @if(auth()->user()->hasAnyRole(['admin', 'kasir']))
-<x-responsive-nav-link :href="route('transaksi.index')" :active="request()->routeIs('transaksi.*')">
-                {{ __('Transaksi') }}
-            </x-responsive-nav-link>
-@endif
-            @role('admin')
-<x-responsive-nav-link :href="route('kategori.index')" :active="request()->routeIs('kategori.*')">
-                {{ __('Kategori') }}
-            </x-responsive-nav-link>
-@endrole
-            @role('admin')
-<x-responsive-nav-link :href="route('supplier.index')" :active="request()->routeIs('supplier.*')">
-                {{ __('Supplier') }}
-            </x-responsive-nav-link>
-@endrole
-            @role('admin')
-<x-responsive-nav-link :href="route('pelanggan.index')" :active="request()->routeIs('pelanggan.*')">
-                {{ __('Pelanggan') }}
-            </x-responsive-nav-link>
-@endrole
-            @role('admin')
-<x-responsive-nav-link :href="route('cabang.index')" :active="request()->routeIs('cabang.*')">
-                {{ __('Cabang') }}
-            </x-responsive-nav-link>
-@endrole
-            @role('admin')
-<x-responsive-nav-link :href="route('petugas.index')" :active="request()->routeIs('petugas.*')">
-                {{ __('Petugas') }}
-            </x-responsive-nav-link>
-@endrole
+    <div :class="{'block': open, 'hidden': ! open}" class="hidden xl:hidden">
+        <div data-navigation="mobile" class="pt-2 pb-3 space-y-1">
+                    @role('admin')
+                    <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="whitespace-nowrap">Dashboard</x-responsive-nav-link>
+                    @endrole
+                    @role('admin')
+                    <x-responsive-nav-link :href="route('produk.index')" :active="request()->routeIs('produk.*')" class="whitespace-nowrap">Produk</x-responsive-nav-link>
+                    @endrole
+                    @if(auth()->user()->hasAnyRole(['admin', 'kasir']))
+                    <x-responsive-nav-link :href="route('transaksi.index')" :active="request()->routeIs('transaksi.*')" class="whitespace-nowrap">Transaksi</x-responsive-nav-link>
+                    @endif
+                    @role('admin')
+                    <x-responsive-nav-link :href="route('kategori.index')" :active="request()->routeIs('kategori.*')" class="whitespace-nowrap">Kategori</x-responsive-nav-link>
+                    @endrole
+                    @role('admin')
+                    <x-responsive-nav-link :href="route('supplier.index')" :active="request()->routeIs('supplier.*')" class="whitespace-nowrap">Supplier</x-responsive-nav-link>
+                    @endrole
+                    @role('admin')
+                    <x-responsive-nav-link :href="route('pelanggan.index')" :active="request()->routeIs('pelanggan.*')" class="whitespace-nowrap">Pelanggan</x-responsive-nav-link>
+                    @endrole
+                    @role('admin')
+                    <x-responsive-nav-link :href="route('cabang.index')" :active="request()->routeIs('cabang.*')" class="whitespace-nowrap">Cabang</x-responsive-nav-link>
+                    @endrole
+                    @role('admin')
+                    <x-responsive-nav-link :href="route('petugas.index')" :active="request()->routeIs('petugas.*')" class="whitespace-nowrap">Petugas</x-responsive-nav-link>
+                    @endrole
+                    @role('admin')
+                    <x-responsive-nav-link :href="route('kasir.index')" :active="request()->routeIs('kasir.*')" class="whitespace-nowrap">Akun Kasir</x-responsive-nav-link>
+                    @endrole
         </div>
 
         <!-- Responsive Settings Options -->

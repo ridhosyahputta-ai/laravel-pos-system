@@ -1,33 +1,31 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">Tambah Kategori</h2>
-    </x-slot>
+<x-master-layout title="Tambah Kategori" description="Susun kategori agar katalog lebih mudah dikelola.">
 
-    <div class="py-12">
-        <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white rounded-xl shadow-md ring-1 ring-gray-100 p-8">
-                <form action="{{ route('kategori.store') }}" method="POST" class="space-y-6">
+    <div class="space-y-5">
+        <div class="max-w-3xl mx-auto">
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+                <x-master-feedback />
+                <form action="{{ route('kategori.store') }}" method="POST" class="master-form grid gap-5 md:grid-cols-2">
                     @csrf
                     <div>
-                        <x-input-label for="nama_kategori" :value="__('Nama Kategori')" />
-                        <x-text-input id="nama_kategori" class="block mt-1.5 w-full" type="text" name="nama_kategori" :value="old('nama_kategori')" required />
+                        <x-master-label for="nama_kategori" :value="__('Nama Kategori')" />
+                        <x-master-input id="nama_kategori" class="block mt-1.5 w-full" type="text" name="nama_kategori" :value="old('nama_kategori')" required />
                         @error('nama_kategori')
                             <p class="text-sm text-red-600 mt-1.5">{{ $message }}</p>
                         @enderror
                     </div>
                     <div>
-                        <x-input-label for="keterangan" :value="__('Keterangan')" />
-                        <textarea id="keterangan" name="keterangan" rows="4" maxlength="2000" class="block mt-1.5 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-blue-500 dark:focus:border-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600 rounded-md shadow-sm">{{ old('keterangan') }}</textarea>
+                        <x-master-label for="keterangan" :value="__('Keterangan')" />
+                        <textarea id="keterangan" name="keterangan" rows="4" maxlength="2000" class="master-control block mt-1.5">{{ old('keterangan') }}</textarea>
                         @error('keterangan')
                             <p class="text-sm text-red-600 mt-1.5">{{ $message }}</p>
                         @enderror
                     </div>
-                    <div class="flex items-center gap-4 pt-6 mt-2 border-t border-gray-100">
-                        <x-primary-button>Simpan</x-primary-button>
-                        <a href="{{ route('kategori.index') }}" class="text-sm font-medium text-gray-600 hover:text-gray-900 transition">Batal</a>
+                    <div class="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center">
+                        <x-master-button>Simpan</x-master-button>
+                        <a href="{{ route('kategori.index') }}" class="master-btn master-btn-secondary">Batal</a>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-</x-app-layout>
+</x-master-layout>

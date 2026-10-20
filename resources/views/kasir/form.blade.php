@@ -1,5 +1,5 @@
 <x-app-layout>
-<x-slot name="header"><h2 class="font-semibold text-xl">{{ $kasir->exists ? 'Edit' : 'Tambah' }} Akun Kasir</h2></x-slot>
+<x-slot name="header"><h2 class="font-semibold text-xl text-gray-800 dark:text-gray-100">{{ $kasir->exists ? 'Edit' : 'Tambah' }} Akun Kasir</h2></x-slot>
 <div class="py-12 max-w-3xl mx-auto px-6"><div class="bg-white shadow-sm rounded-lg p-6">
 @if($errors->any())<ul class="mb-4 text-red-600">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>@endif
 @if($cabangs->isEmpty())<p class="mb-4">Buat Cabang terlebih dahulu sebelum menyimpan akun Kasir. <a class="text-blue-600" href="{{ route('cabang.create') }}">Tambah Cabang</a></p>@endif

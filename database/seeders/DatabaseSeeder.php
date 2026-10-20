@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Actions\EnsurePosRoles;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Spatie\Permission\Models\Role;
 
 class DatabaseSeeder extends Seeder
 {
@@ -25,7 +25,7 @@ class DatabaseSeeder extends Seeder
         }
 
         DB::transaction(function () use ($name, $email, $password) {
-            $role = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+            $role = app(EnsurePosRoles::class)->handle()['admin'];
             $user = User::create(['name' => $name, 'email' => $email, 'password' => $password]);
             $user->assignRole($role);
         });

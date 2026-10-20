@@ -10,7 +10,7 @@ Runway adalah aplikasi Point of Sale berbasis Laravel untuk mengelola master dat
 - Admin dapat membuat, mengedit, dan menonaktifkan akun Kasir; password di-hash dan role ditetapkan backend. Satu Kasir wajib ditempatkan pada satu Cabang.
 - Akun nonaktif ditolak saat login dan pada request berikutnya, termasuk session lama. Registrasi publik dinonaktifkan.
 - Profil sendiri: perubahan nama/email dan password dengan verifikasi password saat ini. Penghapusan akun sendiri dinonaktifkan.
-- Enam modul master data dengan CRUD, validasi, pagination, dan proteksi relasi.
+- Enam modul master data dengan CRUD, validasi, pagination, proteksi relasi, serta tampilan form dan tabel yang konsisten.
 - Penjualan satu atau beberapa produk, riwayat, dan detail transaksi. Admin melihat seluruh transaksi; Kasir hanya melihat transaksi miliknya.
 - Ekspor daftar produk ke PDF.
 - Antarmuka Blade dengan branding Runway, Tailwind CSS, dan Alpine.js.
@@ -25,6 +25,10 @@ Runway adalah aplikasi Point of Sale berbasis Laravel untuk mengelola master dat
 | Petugas | Nama, username unik, dan label peran master data; terpisah dari akun login |
 
 Akses master data, ekspor PDF produk, dan pengelolaan Kasir hanya untuk Admin. Admin dan Kasir aktif dapat membuat transaksi; Kasir tanpa Cabang dan pengguna tanpa role tidak dapat mengakses fitur penjualan. Profil/password sendiri tetap tersedia, sedangkan penghapusan akun sendiri dinonaktifkan.
+
+Halaman index, tambah, dan edit Produk, Kategori, Supplier, Pelanggan, Cabang, serta Petugas menggunakan komponen Blade `master-*` yang dapat digunakan kembali: layout, input, label, tombol, toolbar, feedback, tabel, empty state, dan pagination. Form responsif, tabel dengan scroll internal, pesan validasi yang jelas, serta focus/hover state diterapkan dengan styling khusus master data.
+
+Palet master data menggunakan background abu-abu kebiruan (`#e2e8f0`), kartu lembut (`#e8eef5`), dan input terang (`#f1f5f9`) untuk mengurangi silau; tombol utama tetap biru Runway. Penyesuaian warna terakhir hanya mengubah background, tanpa mengubah layout atau fungsi.
 
 Fondasi akun Kasir telah diimplementasikan dan diuji otomatis. **Pengujian manual akun Kasir melalui browser belum selesai.**
 
@@ -95,6 +99,14 @@ Repository tidak menyediakan akun demo, password default, atau salinan akun loka
 
 Setelah target database kosong dan konfigurasi privat dipastikan, provisioning dapat dilakukan secara eksplisit dengan `php artisan db:seed --class=DatabaseSeeder`. Ini bukan langkah otomatis, dan bukan cara mereset password pada database existing. Setelah login sebagai Admin, buat master Cabang terlebih dahulu, lalu gunakan menu **Akun Kasir** untuk membuat akun. Form menampilkan petunjuk dan menonaktifkan penyimpanan jika belum ada Cabang. Tidak ada Cabang atau Kasir yang dibuat otomatis.
 
+Provisioning role dipisahkan dari pembuatan akun melalui `EnsurePosRoles`. Instalasi baru melalui seeder Admin menyiapkan role `admin/web` dan `kasir/web`. Pada instalasi existing yang kehilangan role, command berikut hanya menambahkan role yang belum tersedia, tanpa membuat akun atau mengubah role/penugasan yang sudah ada:
+
+```powershell
+php artisan runway:provision-roles
+```
+
+Command bersifat idempotent. Halaman daftar Kasir tetap dapat dibuka meskipun role Kasir belum diprovision, tanpa melakukan penulisan otomatis pada GET.
+
 ## Menjalankan lokal
 
 Dari terminal khusus pada root project:
@@ -119,17 +131,17 @@ Untuk mengembangkan aset, jalankan `npm run dev` pada terminal terpisah. Checkou
 
 ## Pengujian dan isolasi
 
-Hasil regresi terakhir untuk finalisasi Tahap 4.1:
+Hasil regresi terakhir untuk finalisasi UI/UX master data dan perbaikan provisioning role Kasir:
 
 | Suite | Test lulus | Assertions |
 | --- | ---: | ---: |
-| Regresi backend dan presentasi pada SQLite `:memory:` | 226 | 1.380 |
-| Fondasi Kasir pada MariaDB terisolasi dengan rollback | 4 | 33 |
+| Regresi backend dan presentasi pada SQLite `:memory:` | 233 | 1.416 |
+| Fondasi Kasir dan provisioning role pada MariaDB terisolasi dengan rollback | 5 | 41 |
 | JavaScript form dengan DOM fixture | 17 | Tidak dihitung oleh Node sebagai assertions terpisah |
 
-Regresi SQLite mencakup autentikasi Admin/Kasir, registrasi yang dinonaktifkan, akun nonaktif dan session lama, validasi pengelolaan Kasir, pembatasan endpoint Admin, kepemilikan transaksi, manipulasi input, data lama, idempotency, dan enam master data. Empat test MariaDB terbaru memeriksa skema/foreign key native, kepemilikan transaksi, idempotency, stok, rollback, serta akun nonaktif dengan perubahan fixture yang di-rollback.
+Regresi SQLite mencakup autentikasi Admin/Kasir, registrasi yang dinonaktifkan, akun nonaktif dan session lama, validasi pengelolaan Kasir, pembatasan endpoint Admin, kepemilikan transaksi, manipulasi input, data lama, idempotency, dan enam master data. Lima test MariaDB terbaru memeriksa skema/foreign key native, kepemilikan transaksi, idempotency, stok, rollback, akun nonaktif, dan provisioning role idempotent dengan perubahan fixture yang di-rollback. Test regresi juga memastikan halaman Kasir aman saat role belum tersedia serta penugasan Admin tetap utuh.
 
-Suite MariaDB transaksi dari Tahap 3 juga tersedia untuk CRUD enam master, PDF, harga backend, nomor unik, dua proses dengan token sama, perebutan stok, serta deadlock InnoDB nyata dan retry. Pengujian konkurensi tersebut menggunakan proses PHP dan koneksi terpisah, bukan simulasi SQLite; suite itu tidak diulang dalam finalisasi Tahap 4.1 karena membersihkan fixture existing.
+Suite MariaDB transaksi dari Tahap 3 juga tersedia untuk CRUD enam master, PDF, harga backend, nomor unik, dua proses dengan token sama, perebutan stok, serta deadlock InnoDB nyata dan retry. Pengujian konkurensi tersebut menggunakan proses PHP dan koneksi terpisah, bukan simulasi SQLite; suite itu tidak diulang dalam finalisasi UI/UX ini karena membersihkan fixture existing.
 
 Pengujian presentasi mencakup batas form, CSRF/token, tanggal WIB termasuk pergantian hari/tahun, dan pelestarian nilai UTC. Test JavaScript menjalankan script form yang sebenarnya dengan DOM fixture untuk input tidak valid, estimasi, penguncian submit, dan pemulihan back-forward cache. Ini bukan pengganti pengujian browser interaktif.
 
@@ -167,11 +179,11 @@ php vendor/phpunit/phpunit/phpunit -c phpunit.mariadb.xml tests/MariaDb/CashierF
 
 Runner hanya memuat environment testing, memeriksa `SELECT DATABASE()` dan akun aktif, menolak URL/config override yang berbahaya, serta membuktikan akses akun testing ke database utama ditolak. `CashierFoundationTest` memakai transaksi dan rollback tanpa menghapus baris existing. Suite MariaDB lama membersihkan fixture pada `db_runway_testing` setiap test; jangan menjalankan seluruh suite pada data yang harus dipertahankan. Suite penuh juga memuat pengujian perubahan skema kategori/idempotency dan hanya boleh dijalankan dengan izin perubahan skema serta pembersihan fixture testing.
 
-Seluruh suite default SQLite lulus; pengujian registrasi dan penghapusan akun telah diselaraskan dengan kebijakan POS internal. Hasil otomatis tidak menggantikan pengujian manual melalui browser.
+Seluruh suite default SQLite lulus; pengujian registrasi dan penghapusan akun telah diselaraskan dengan kebijakan POS internal. Build frontend, pemeriksaan sintaks/route, dan diff juga diverifikasi. Hasil otomatis tidak menggantikan pengujian manual melalui browser; verifikasi visual desktop/mobile menyeluruh dan pengujian manual Kasir belum dinyatakan selesai.
 
 ## Status dan rencana pengembangan
 
-- **Tersedia:** enam master, penjualan atomik, pengurangan stok global, idempotency, detail/riwayat, PDF produk, presentasi WIB, pengelolaan Kasir, status aktif/nonaktif, dan atribusi pengguna/cabang transaksi.
+- **Tersedia:** enam master, penjualan atomik, pengurangan stok global, idempotency, detail/riwayat, PDF produk, presentasi WIB, pengelolaan Kasir, provisioning role idempotent, status aktif/nonaktif, atribusi pengguna/cabang transaksi, serta UI master data yang konsisten.
 - **Akses saat ini:** Admin mengelola sistem; Kasir aktif dengan Cabang dapat menjual dan hanya melihat transaksi miliknya. Label `petugas.role` tidak memberikan hak akses akun login. Registrasi publik dinonaktifkan.
 - **Belum selesai:** pengujian manual akun Kasir melalui browser dan validasi alur operasional end-to-end.
 - **Direncanakan:** stok per cabang, isolasi operasional dan laporan multi-cabang, pembayaran/kembalian, struk, retur, shift, dan pelaporan operasional.

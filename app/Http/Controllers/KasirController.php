@@ -16,7 +16,7 @@ class KasirController extends Controller
 {
     public function index()
     {
-        $kasirs = User::role('kasir')->whereDoesntHave('roles', fn ($q) => $q->where('name', 'admin'))->with('cabang')->latest()->paginate(10);
+        $kasirs = User::whereHas('roles', fn ($q) => $q->where('name', 'kasir')->where('guard_name', 'web'))->whereDoesntHave('roles', fn ($q) => $q->where('name', 'admin'))->with('cabang')->latest()->paginate(10);
 
         return view('kasir.index', compact('kasirs'));
     }

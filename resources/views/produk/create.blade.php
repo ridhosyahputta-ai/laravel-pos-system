@@ -1,44 +1,42 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">Tambah Produk</h2>
-    </x-slot>
+<x-master-layout title="Tambah Produk" description="Kelola katalog, harga, dan stok global produk.">
 
-    <div class="py-12">
-        <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white rounded-xl shadow-md ring-1 ring-gray-100 p-8">
-                <form action="{{ route('produk.store') }}" method="POST" class="space-y-6">
+    <div class="space-y-5">
+        <div class="max-w-4xl mx-auto">
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+                <x-master-feedback />
+                <form action="{{ route('produk.store') }}" method="POST" class="master-form grid gap-5 md:grid-cols-2">
                     @csrf
                     <div>
-                        <x-input-label for="nama" :value="__('Nama Produk')" />
-                        <x-text-input id="nama" class="block mt-1.5 w-full" type="text" name="nama" :value="old('nama')" required />
+                        <x-master-label for="nama" :value="__('Nama Produk')" />
+                        <x-master-input id="nama" class="block mt-1.5 w-full" type="text" name="nama" :value="old('nama')" required />
                         @error('nama')
                             <p class="text-sm text-red-600 mt-1.5">{{ $message }}</p>
                         @enderror
                     </div>
                     <div>
-                        <x-input-label for="kode" :value="__('Kode Produk')" />
-                        <x-text-input id="kode" class="block mt-1.5 w-full" type="text" name="kode" :value="old('kode')" required />
+                        <x-master-label for="kode" :value="__('Kode Produk')" />
+                        <x-master-input id="kode" class="block mt-1.5 w-full" type="text" name="kode" :value="old('kode')" required />
                         @error('kode')
                             <p class="text-sm text-red-600 mt-1.5">{{ $message }}</p>
                         @enderror
                     </div>
                     <div>
-                        <x-input-label for="harga" :value="__('Harga')" />
-                        <x-text-input id="harga" class="block mt-1.5 w-full" type="number" min="0" max="2147483647" step="1" name="harga" :value="old('harga')" required />
+                        <x-master-label for="harga" :value="__('Harga')" />
+                        <x-master-input id="harga" class="block mt-1.5 w-full" type="number" min="0" max="2147483647" step="1" name="harga" :value="old('harga')" required />
                         @error('harga')
                             <p class="text-sm text-red-600 mt-1.5">{{ $message }}</p>
                         @enderror
                     </div>
                     <div>
-                        <x-input-label for="stok" :value="__('Stok')" />
-                        <x-text-input id="stok" class="block mt-1.5 w-full" type="number" min="0" max="2147483647" step="1" name="stok" :value="old('stok')" required />
+                        <x-master-label for="stok" :value="__('Stok')" />
+                        <x-master-input id="stok" class="block mt-1.5 w-full" type="number" min="0" max="2147483647" step="1" name="stok" :value="old('stok')" required />
                         @error('stok')
                             <p class="text-sm text-red-600 mt-1.5">{{ $message }}</p>
                         @enderror
                     </div>
                     <div>
-                        <x-input-label for="kategori_id" :value="__('Kategori')" />
-                        <select id="kategori_id" name="kategori_id" class="block mt-1.5 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <x-master-label for="kategori_id" :value="__('Kategori')" />
+                        <select id="kategori_id" name="kategori_id" class="master-control block mt-1.5">
                             <option value="">-- Pilih Kategori --</option>
                             @foreach ($kategoris as $kategori)
                                 <option value="{{ $kategori->id }}" {{ old('kategori_id') == $kategori->id ? 'selected' : '' }}>{{ $kategori->nama_kategori }}</option>
@@ -49,8 +47,8 @@
                         @enderror
                     </div>
                     <div>
-                        <x-input-label for="supplier_id" :value="__('Supplier')" />
-                        <select id="supplier_id" name="supplier_id" class="block mt-1.5 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <x-master-label for="supplier_id" :value="__('Supplier')" />
+                        <select id="supplier_id" name="supplier_id" class="master-control block mt-1.5">
                             <option value="">-- Pilih Supplier --</option>
                             @foreach ($suppliers as $supplier)
                                 <option value="{{ $supplier->id }}" {{ old('supplier_id') == $supplier->id ? 'selected' : '' }}>{{ $supplier->nama_supplier }}</option>
@@ -61,18 +59,18 @@
                         @enderror
                     </div>
                     <div>
-                        <x-input-label for="keterangan" :value="__('Keterangan')" />
-                        <textarea id="keterangan" name="keterangan" rows="4" maxlength="2000" class="block mt-1.5 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-blue-500 dark:focus:border-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600 rounded-md shadow-sm">{{ old('keterangan') }}</textarea>
+                        <x-master-label for="keterangan" :value="__('Keterangan')" />
+                        <textarea id="keterangan" name="keterangan" rows="4" maxlength="2000" class="master-control block mt-1.5">{{ old('keterangan') }}</textarea>
                         @error('keterangan')
                             <p class="text-sm text-red-600 mt-1.5">{{ $message }}</p>
                         @enderror
                     </div>
-                    <div class="flex items-center gap-4 pt-6 mt-2 border-t border-gray-100">
-                        <x-primary-button>Simpan</x-primary-button>
-                        <a href="{{ route('produk.index') }}" class="text-sm font-medium text-gray-600 hover:text-gray-900 transition">Batal</a>
+                    <div class="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center">
+                        <x-master-button>Simpan</x-master-button>
+                        <a href="{{ route('produk.index') }}" class="master-btn master-btn-secondary">Batal</a>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-</x-app-layout>
+</x-master-layout>

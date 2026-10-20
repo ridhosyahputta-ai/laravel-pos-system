@@ -113,4 +113,20 @@ final class CashierFoundationTest extends LaravelTestCase
         $this->post('/login', ['email' => $c->email, 'password' => 'password'])->assertSessionHasErrors('email');
         $this->assertGuest();
     }
+
+    public function test_role_provisioning_preserves_accounts_and_is_idempotent(): void
+    {
+        $admin = $this->account('admin');
+        $before = hash('sha256', serialize($admin->fresh()->getAttributes()));
+        $roleBefore = Role::findByName('admin', 'web')->getAttributes();
+        $count = User::count();
+        $this->artisan('runway:provision-roles')->assertSuccessful();
+        $this->artisan('runway:provision-roles')->assertSuccessful();
+        $this->assertSame(1, Role::where('name', 'kasir')->where('guard_name', 'web')->count());
+        $this->assertSame($count, User::count());
+        $this->assertSame($before, hash('sha256', serialize($admin->fresh()->getAttributes())));
+        $this->assertSame($roleBefore, Role::findByName('admin', 'web')->getAttributes());
+        $this->assertSame(['admin'], $admin->fresh()->getRoleNames()->all());
+        $this->actingAs($admin)->get('/kasir')->assertOk();
+    }
 }

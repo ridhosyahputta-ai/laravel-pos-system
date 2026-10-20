@@ -1,5 +1,5 @@
 <x-app-layout>
-<x-slot name="header"><h2 class="font-semibold text-xl">Akun Kasir</h2></x-slot>
+<x-slot name="header"><h2 class="font-semibold text-xl text-gray-800 dark:text-gray-100">Akun Kasir</h2></x-slot>
 <div class="py-12 max-w-7xl mx-auto sm:px-6 lg:px-8"><div class="bg-white shadow-sm rounded-lg p-6">
 @if(session('success'))<p class="mb-4 text-green-700">{{ session('success') }}</p>@endif
 <a href="{{ route('kasir.create') }}" class="text-blue-600">+ Tambah Kasir</a>

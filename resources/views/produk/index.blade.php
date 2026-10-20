@@ -1,64 +1,55 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">Data Produk</h2>
-    </x-slot>
+<x-master-layout title="Data Produk" description="Kelola katalog, harga, dan stok global produk.">
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                @if (session('success'))
-                    <div class="mb-4 p-4 bg-green-100 text-green-700 rounded-lg">{{ session('success') }}</div>
-                @endif
+    <div class="space-y-5">
+        <div class="w-full">
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+                <x-master-feedback />
 
-                @if (session('error'))
-                    <div class="mb-4 p-4 bg-red-100 text-red-700 rounded-lg" role="alert">{{ session('error') }}</div>
-                @endif
+               <x-master-toolbar title="Daftar Produk" :total="$produks->total()">
+    <a href="{{ route('produk.create') }}" class="master-btn master-btn-primary">+ Tambah Produk</a>
+    <a href="{{ route('produk.pdf') }}" class="master-btn master-btn-secondary">Export PDF</a>
+</x-master-toolbar>
 
-               <div class="mb-4 flex gap-3">
-    <a href="{{ route('produk.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">+ Tambah Produk</a>
-    <a href="{{ route('produk.pdf') }}" class="text-white px-4 py-2 rounded-lg" style="background-color: #16a34a;" onmouseover="this.style.backgroundColor='#15803d'" onmouseout="this.style.backgroundColor='#16a34a'">Export PDF</a>
-</div>
-
-                <table class="w-full text-left border-collapse border border-gray-200">
+                <x-master-table>
                     <thead>
-                        <tr class="bg-gray-100">
-                            <th class="border p-3">No</th>
-                            <th class="border p-3">Kode</th>
-                            <th class="border p-3">Nama</th>
-                            <th class="border p-3">Kategori</th>
-                            <th class="border p-3">Supplier</th>
-                            <th class="border p-3">Harga</th>
-                            <th class="border p-3">Stok</th>
-                            <th class="border p-3">Keterangan</th>
-                            <th class="border p-3">Aksi</th>
+                        <tr>
+                            <th>No</th>
+                            <th>Kode</th>
+                            <th>Nama</th>
+                            <th>Kategori</th>
+                            <th>Supplier</th>
+                            <th>Harga</th>
+                            <th>Stok</th>
+                            <th>Keterangan</th>
+                            <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($produks as $index => $produk)
                             <tr>
-                                <td class="border p-3">{{ $produks->firstItem() + $index }}</td>
-                                <td class="border p-3">{{ $produk->kode }}</td>
-                                <td class="border p-3">{{ $produk->nama }}</td>
-                                <td class="border p-3">{{ $produk->kategori->nama_kategori ?? '-' }}</td>
-                                <td class="border p-3">{{ $produk->supplier->nama_supplier ?? '-' }}</td>
-                                <td class="border p-3">{{ $produk->harga }}</td>
-                                <td class="border p-3">{{ $produk->stok }}</td>
-                                <td class="border p-3">{{ $produk->keterangan ?? '-' }}</td>
-                                <td class="border p-3 flex gap-3">
-                                    <a href="{{ route('produk.edit', $produk->id) }}" class="text-blue-600 hover:underline">Edit</a>
+                                <td>{{ $produks->firstItem() + $index }}</td>
+                                <td>{{ $produk->kode }}</td>
+                                <td>{{ $produk->nama }}</td>
+                                <td>{{ $produk->kategori->nama_kategori ?? '-' }}</td>
+                                <td>{{ $produk->supplier->nama_supplier ?? '-' }}</td>
+                                <td>{{ $produk->harga }}</td>
+                                <td>{{ $produk->stok }}</td>
+                                <td>{{ $produk->keterangan ?? '-' }}</td>
+                                <td><div class="flex items-center gap-2">
+                                    <a href="{{ route('produk.edit', $produk->id) }}" class="master-action master-action-edit">Edit</a>
                                     <form action="{{ route('produk.destroy', $produk->id) }}" method="POST" onsubmit="return confirm('Hapus data?');">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="text-red-600 hover:underline">Hapus</button>
+                                        <button type="submit" class="master-action master-action-delete">Hapus</button>
                                     </form>
-                                </td>
+                                </div></td>
                             </tr>
                         @empty
-                            <tr><td colspan="9" class="border p-3 text-center text-gray-500">Belum ada data.</td></tr>
+                            <x-master-empty colspan="9" module="Produk" :url="route('produk.create')" />
                         @endforelse
                     </tbody>
-                </table>
-                <div class="mt-4">{{ $produks->links() }}</div>
+                </x-master-table>
+                <div class="mt-5 border-t border-slate-100 pt-4">{{ $produks->links('components.master-pagination') }}</div>
             </div>
         </div>
     </div>
-</x-app-layout>
+</x-master-layout>

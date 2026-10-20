@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Actions\EnsurePosRoles;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +27,7 @@ class userseeder extends Seeder
         }
 
         DB::transaction(function () use ($accounts) {
+            app(EnsurePosRoles::class)->handle();
             foreach ($accounts as $account) {
                 $user = User::create([
                     'name' => $account['name'],

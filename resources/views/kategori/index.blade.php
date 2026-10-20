@@ -1,49 +1,44 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">Data Kategori</h2>
-    </x-slot>
+<x-master-layout title="Data Kategori" description="Susun kategori agar katalog lebih mudah dikelola.">
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                @if (session('success'))
-                    <div class="mb-4 p-4 bg-green-100 text-green-700 rounded-lg">{{ session('success') }}</div>
-                @endif
+    <div class="space-y-5">
+        <div class="w-full">
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+                <x-master-feedback />
 
-                <div class="mb-4">
-                    <a href="{{ route('kategori.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">+ Tambah Kategori</a>
-                </div>
+                <x-master-toolbar title="Daftar Kategori" :total="$kategoris->total()">
+                    <a href="{{ route('kategori.create') }}" class="master-btn master-btn-primary">+ Tambah Kategori</a>
+                </x-master-toolbar>
 
-                <table class="w-full text-left border-collapse border border-gray-200">
+                <x-master-table>
                     <thead>
-                        <tr class="bg-gray-100">
-                            <th class="border p-3">No</th>
-                            <th class="border p-3">Nama Kategori</th>
-                            <th class="border p-3">Keterangan</th>
-                            <th class="border p-3">Aksi</th>
+                        <tr>
+                            <th>No</th>
+                            <th>Nama Kategori</th>
+                            <th>Keterangan</th>
+                            <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($kategoris as $index => $item)
                             <tr>
-                                <td class="border p-3">{{ $kategoris->firstItem() + $index }}</td>
-                                <td class="border p-3">{{ $item->nama_kategori }}</td>
-                                <td class="border p-3">{{ $item->keterangan ?? '-' }}</td>
-                                <td class="border p-3 flex gap-3">
-                                    <a href="{{ route('kategori.edit', $item->id) }}" class="text-blue-600 hover:underline">Edit</a>
+                                <td>{{ $kategoris->firstItem() + $index }}</td>
+                                <td>{{ $item->nama_kategori }}</td>
+                                <td>{{ $item->keterangan ?? '-' }}</td>
+                                <td><div class="flex items-center gap-2">
+                                    <a href="{{ route('kategori.edit', $item->id) }}" class="master-action master-action-edit">Edit</a>
                                     <form action="{{ route('kategori.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Hapus data?');">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="text-red-600 hover:underline">Hapus</button>
+                                        <button type="submit" class="master-action master-action-delete">Hapus</button>
                                     </form>
-                                </td>
+                                </div></td>
                             </tr>
                         @empty
-                            <tr><td colspan="4" class="border p-3 text-center text-gray-500">Belum ada data.</td></tr>
+                            <x-master-empty colspan="4" module="Kategori" :url="route('kategori.create')" />
                         @endforelse
                     </tbody>
-                </table>
-                <div class="mt-4">{{ $kategoris->links() }}</div>
+                </x-master-table>
+                <div class="mt-5 border-t border-slate-100 pt-4">{{ $kategoris->links('components.master-pagination') }}</div>
             </div>
         </div>
     </div>
-</x-app-layout>
+</x-master-layout>
