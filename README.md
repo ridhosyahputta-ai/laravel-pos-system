@@ -30,7 +30,7 @@ Halaman index, tambah, dan edit Produk, Kategori, Supplier, Pelanggan, Cabang, s
 
 Palet master data menggunakan background abu-abu kebiruan (`#e2e8f0`), kartu lembut (`#e8eef5`), dan input terang (`#f1f5f9`) untuk mengurangi silau; tombol utama tetap biru Runway. Penyesuaian warna terakhir hanya mengubah background, tanpa mengubah layout atau fungsi.
 
-Fondasi akun Kasir telah diimplementasikan dan diuji otomatis. **Pengujian manual akun Kasir melalui browser belum selesai.**
+Fondasi akun Kasir telah diimplementasikan dan diuji otomatis. **Alur utama login, pembatasan akses, dan penjualan Kasir telah dikonfirmasi melalui pengujian manual pada 21 Oktober 2026.** Verifikasi rinci penonaktifan dan cakupan operasional end-to-end masih memerlukan konfirmasi.
 
 ## Transaksi dan integritas stok
 
@@ -139,6 +139,16 @@ Hasil regresi terakhir untuk finalisasi UI/UX master data dan perbaikan provisio
 | Fondasi Kasir dan provisioning role pada MariaDB terisolasi dengan rollback | 5 | 41 |
 | JavaScript form dengan DOM fixture | 17 | Tidak dihitung oleh Node sebagai assertions terpisah |
 
+**Pengujian manual yang dikonfirmasi (21 Oktober 2026):**
+
+- Login Admin berhasil; dashboard, Cabang, dan Akun Kasir dapat diakses Admin.
+- Cabang dan akun Kasir uji berhasil dibuat melalui antarmuka Admin, kemudian login Kasir berhasil.
+- Akses langsung Kasir ke Dashboard, Produk, Cabang, dan Akun Kasir menghasilkan HTTP 403.
+- Penjualan manual melalui Admin dan Kasir berhasil; stok berkurang masing-masing satu unit dan transaksi Kasir tampil pada riwayatnya.
+- Audit database read-only memverifikasi atribusi pengguna/cabang transaksi baru, kesesuaian jumlah dan total, pelestarian transaksi lama, serta tidak adanya duplikasi yang tidak diharapkan.
+
+Pengujian penonaktifan Kasir dilaporkan telah dilakukan. Detail penghentian session lama dan penolakan login ulang belum diverifikasi secara independen pada audit ini, sehingga tidak dinyatakan lulus secara manual. Identitas akun uji dan data bisnis lokal tidak disertakan dalam dokumentasi.
+
 Regresi SQLite mencakup autentikasi Admin/Kasir, registrasi yang dinonaktifkan, akun nonaktif dan session lama, validasi pengelolaan Kasir, pembatasan endpoint Admin, kepemilikan transaksi, manipulasi input, data lama, idempotency, dan enam master data. Lima test MariaDB terbaru memeriksa skema/foreign key native, kepemilikan transaksi, idempotency, stok, rollback, akun nonaktif, dan provisioning role idempotent dengan perubahan fixture yang di-rollback. Test regresi juga memastikan halaman Kasir aman saat role belum tersedia serta penugasan Admin tetap utuh.
 
 Suite MariaDB transaksi dari Tahap 3 juga tersedia untuk CRUD enam master, PDF, harga backend, nomor unik, dua proses dengan token sama, perebutan stok, serta deadlock InnoDB nyata dan retry. Pengujian konkurensi tersebut menggunakan proses PHP dan koneksi terpisah, bukan simulasi SQLite; suite itu tidak diulang dalam finalisasi UI/UX ini karena membersihkan fixture existing.
@@ -179,13 +189,13 @@ php vendor/phpunit/phpunit/phpunit -c phpunit.mariadb.xml tests/MariaDb/CashierF
 
 Runner hanya memuat environment testing, memeriksa `SELECT DATABASE()` dan akun aktif, menolak URL/config override yang berbahaya, serta membuktikan akses akun testing ke database utama ditolak. `CashierFoundationTest` memakai transaksi dan rollback tanpa menghapus baris existing. Suite MariaDB lama membersihkan fixture pada `db_runway_testing` setiap test; jangan menjalankan seluruh suite pada data yang harus dipertahankan. Suite penuh juga memuat pengujian perubahan skema kategori/idempotency dan hanya boleh dijalankan dengan izin perubahan skema serta pembersihan fixture testing.
 
-Seluruh suite default SQLite lulus; pengujian registrasi dan penghapusan akun telah diselaraskan dengan kebijakan POS internal. Build frontend, pemeriksaan sintaks/route, dan diff juga diverifikasi. Hasil otomatis tidak menggantikan pengujian manual melalui browser; verifikasi visual desktop/mobile menyeluruh dan pengujian manual Kasir belum dinyatakan selesai.
+Seluruh suite default SQLite lulus; pengujian registrasi dan penghapusan akun telah diselaraskan dengan kebijakan POS internal. Build frontend, pemeriksaan sintaks/route, dan diff juga diverifikasi. Hasil otomatis tidak menggantikan pengujian manual melalui browser. Alur utama Kasir telah dikonfirmasi sebagaimana dicatat di atas; verifikasi visual desktop/mobile menyeluruh serta detail pengujian penonaktifan masih memerlukan konfirmasi.
 
 ## Status dan rencana pengembangan
 
 - **Tersedia:** enam master, penjualan atomik, pengurangan stok global, idempotency, detail/riwayat, PDF produk, presentasi WIB, pengelolaan Kasir, provisioning role idempotent, status aktif/nonaktif, atribusi pengguna/cabang transaksi, serta UI master data yang konsisten.
 - **Akses saat ini:** Admin mengelola sistem; Kasir aktif dengan Cabang dapat menjual dan hanya melihat transaksi miliknya. Label `petugas.role` tidak memberikan hak akses akun login. Registrasi publik dinonaktifkan.
-- **Belum selesai:** pengujian manual akun Kasir melalui browser dan validasi alur operasional end-to-end.
+- **Belum selesai:** verifikasi rinci penonaktifan Kasir (session lama dan login ulang), review visual desktop/mobile menyeluruh, serta validasi seluruh skenario operasional end-to-end.
 - **Direncanakan:** stok per cabang, isolasi operasional dan laporan multi-cabang, pembayaran/kembalian, struk, retur, shift, dan pelaporan operasional.
 
 Keberadaan master Cabang belum berarti isolasi multi-cabang sudah diterapkan. Project belum dinyatakan siap produksi.
